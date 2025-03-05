@@ -1,4 +1,4 @@
-name: Deploy VMs
+name: Deploy VMs  # Name is important
 on:
   workflow_dispatch:
     inputs:
@@ -12,11 +12,5 @@ jobs:
   deploy-vms:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Deploy VMs
-        run: |
-          echo "Deploying ${{ inputs.vm_count }} VMs"
-          # Add your VM deployment logic here
-          # For example, could be a script call, Terraform command, etc.
+        run: echo "Deploying ${{ inputs.vm_count }} VMs"
