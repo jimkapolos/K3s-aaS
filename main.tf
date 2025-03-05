@@ -8,14 +8,7 @@ terraform {
 }
 
 provider "kubernetes" {
-  host = "https://192.168.188.201:6443"
-
-  client_certificate     = file("~/.kube/client-cert.pem")
-  client_key             = file("~/.kube/client-key.pem")
-  cluster_ca_certificate = file("~/.kube/cluster-ca-cert.pem")
-
-  username = "apel"
-  password = "apel1234"
+  config_path = "~/.kube/config"
 }
 
 
