@@ -7,6 +7,9 @@ terraform {
   }
 }
 
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
 
 resource "vm_instance" "example" {
   count = var.vm_count
