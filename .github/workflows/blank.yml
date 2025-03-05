@@ -1,0 +1,21 @@
+name: Deploy VMs
+on:
+  workflow_dispatch:
+    inputs:
+      vm_count:
+        description: 'Number of VMs to deploy'
+        required: true
+        default: '2'
+        type: number
+
+jobs:
+  deploy-vms:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Print VM Count
+        run: |
+          echo "Deploying ${{ inputs.vm_count }} VMs"
+          # Add your actual VM deployment logic here
