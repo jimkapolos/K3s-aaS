@@ -4,6 +4,10 @@ terraform {
       source = "opentofu/kubernetes"
       version = "2.36.0"
     }
+    vm = {
+      source = "hashicorp/vm"  # Αν είναι διαθέσιμος από το HashiCorp registry
+      version = "latest"
+    }
   }
 }
 
