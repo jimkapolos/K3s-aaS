@@ -10,8 +10,14 @@ terraform {
 provider "kubernetes" {
   host = "https://192.168.188.201:6443"
 
-  config_path = "~/.kube/config"
+  client_certificate     = file("~/.kube/client-cert.pem")
+  client_key             = file("~/.kube/client-key.pem")
+  cluster_ca_certificate = file("~/.kube/cluster-ca-cert.pem")
+
+  username = "apel"
+  password = "apel1234"
 }
+
 
 variable "vm_count" {
   description = "Number of VMs to deploy"
