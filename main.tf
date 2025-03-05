@@ -4,14 +4,15 @@ terraform {
       source = "opentofu/kubernetes"
       version = "2.36.0"
     }
-    vm = {
-      source = "hashicorp/vm"
-    }
   }
 }
 
 provider "kubernetes" {
-  config_path = "~/.kube/config"
+  host = "https://192.168.188.201:6443"
+
+  client_certificate     = file("~/.kube/client-cert.pem")
+  client_key             = file("~/.kube/client-key.pem")
+  cluster_ca_certificate = file("~/.kube/cluster-ca-cert.pem")
 }
 
 variable "vm_count" {
