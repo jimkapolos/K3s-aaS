@@ -15,14 +15,4 @@ variable "vm_count" {
   default     = 2
 }
 
-resource "kubernetes_pod" "example" {
-  metadata {
-    name = "example-pod"
-  }
-  spec {
-    container {
-      name  = "nginx"
-      image = "nginx:latest"
-    }
-  }
-}
+
