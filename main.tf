@@ -5,8 +5,7 @@ terraform {
       version = "2.36.0"
     }
     vm = {
-      source = "hashicorp/vm"  # Αν είναι διαθέσιμος από το HashiCorp registry
-      version = "latest"
+      source = "hashicorp/vm"
     }
   }
 }
@@ -15,13 +14,20 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
-resource "vm_instance" "example" {
-  count = var.vm_count
-  # Ρυθμίσεις για το VM (π.χ. image, τύπος, περιοχή, κλπ.)
-}
-
 variable "vm_count" {
   description = "Number of VMs to deploy"
   type        = number
   default     = 2
+}
+
+resource "kubernetes_pod" "example" {
+  metadata {
+    name = "example-pod"
+  }
+  spec {
+    container {
+      name  = "nginx"
+      image = "nginx:latest"
+    }
+  }
 }
