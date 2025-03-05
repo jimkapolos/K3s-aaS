@@ -17,7 +17,7 @@ jobs:
 
       - name: Install OpenTofu
         run: |
-          curl -fsSL https://opentofu.org/install.sh | sh
+          sudo snap install --classic opentofu
           tofu --version
 
       - name: Initialize OpenTofu
