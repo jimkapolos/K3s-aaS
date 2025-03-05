@@ -1,34 +1,22 @@
 name: Deploy VMs
-
 on:
   workflow_dispatch:
     inputs:
       vm_count:
-        description: "Number of VMs"
+        description: 'Number of VMs to deploy'
         required: true
-        default: "2"
+        default: '2'
+        type: number
 
 jobs:
-  deploy:
+  deploy-vms:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install OpenTofu
+      - name: Deploy VMs
         run: |
-          curl -fsSL https://opentofu.org/install.sh | sh
-          tofu --version
-
-      - name: Initialize OpenTofu
-        run: tofu init
-
-      - name: Apply OpenTofu Configuration
-        run: |
-          tofu apply -auto-approve -var="vm_count=${{ github.event.inputs.vm_count }}"
-
-      - name: Upload tfstate as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tofu-tfstate
-          path: tofu.tfstate
+          echo "Deploying ${{ inputs.vm_count }} VMs"
+          # Add your VM deployment logic here
+          # For example, could be a script call, Terraform command, etc.
