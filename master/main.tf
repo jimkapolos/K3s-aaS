@@ -1,4 +1,4 @@
-terraform {
+tofu {
   required_providers {
     kubevirt = {
       source  = "kubevirt/kubevirt"
