@@ -1,21 +1,34 @@
-name: Deploy VMs (Workflow 1)
+name: Deploy VMs
 on:
   workflow_dispatch:
     inputs:
-      var_file:
-        description: "Variables file (within master directory)"
+      vm_count:
+        description: "Number of VMs"
         required: true
-        default: "main.tf"
+        default: "2"
 jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - name: Checkout repository
+      - name: Checkout current repository
         uses: actions/checkout@v4
+      
+      - name: Checkout vm-test repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/vm-test
+          path: vm-test
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: View master folder contents
+        run: |
+          ls -la ./vm-test/master || echo "Master folder not found in vm-test repository"
+      
       - name: Install OpenTofu
         run: |
           sudo snap install --classic opentofu
           tofu --version
+      
       - name: Set up Kubernetes credentials
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
@@ -23,19 +36,30 @@ jobs:
           sudo mkdir -p /root/.kube
           echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
           sudo chmod 644 /root/.kube/config
+      
+      - name: Check OpenTofu files
+        run: |
+          echo "Current directory files:"
+          ls -la
+          echo "vm-test directory files:"
+          ls -la ./vm-test
+          echo "vm-test/master directory files:"
+          ls -la ./vm-test/master || echo "Master folder not found"
+      
       - name: Initialize OpenTofu
-        run: |
-          cd master/
-          tofu init
+        working-directory: ./vm-test/master
+        run: tofu init
+      
       - name: Apply OpenTofu Configuration
+        working-directory: ./vm-test/master
         env:
-          VAR_FILE: ${{ github.event.inputs.var_file }}
+          VM_COUNT: ${{ github.event.inputs.vm_count }}
         run: |
-          cd master/
-          tofu plan -var-file=$VAR_FILE
-          tofu apply -auto-approve -var-file=$VAR_FILE
+          tofu plan 
+          tofu apply -auto-approve 
+      
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: tofu-tfstate
-          path: master/terraform.tfstate
+          path: ./vm-test/master/tofu.tfstate
