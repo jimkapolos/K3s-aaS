@@ -1,16 +1,17 @@
-name: Deploy VMs
+name: Deploy VMs (Workflow 1)
 
 on:
   workflow_dispatch:
     inputs:
-      vm_count:
-        description: "Number of VMs"
+      tf_file:
+        description: ""
         required: true
-        default: "2"
+        default: "main.tf"
 
 jobs:
   deploy:
     runs-on: self-hosted
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,21 +23,21 @@ jobs:
 
       - name: Set up Kubernetes credentials
         env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}  # Κάνε use το GitHub Secret
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         run: |
-          sudo mkdir -p /root/.kube  # Δημιουργούμε το φάκελο για τον root χρήστη
-          echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null  # Εγγράφουμε το config ως root
-          sudo chmod 644 /root/.kube/config  # Ρυθμίζουμε τα δικαιώματα του αρχείου config
+          sudo mkdir -p /root/.kube
+          echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
+          sudo chmod 644 /root/.kube/config
 
       - name: Initialize OpenTofu
         run: tofu init
 
       - name: Apply OpenTofu Configuration
         env:
-          VM_COUNT: ${{ github.event.inputs.vm_count }}  # Pass the input to OpenTofu
+          TF_FILE: ${{ github.event.inputs.tf_file }}
         run: |
-          tofu plan 
-          tofu apply -auto-approve 
+          tofu plan -var-file=$TF_FILE
+          tofu apply -auto-approve -var-file=$TF_FILE
 
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
