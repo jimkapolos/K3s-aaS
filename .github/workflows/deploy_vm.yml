@@ -6,7 +6,7 @@ on:
       tf_file:
         description: "master/main.tf"
         required: true
-        default: "main.tf"
+        default: "master/main.tf"
 
 jobs:
   deploy:
