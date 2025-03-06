@@ -1,4 +1,4 @@
-name: Deploy VMs
+name: Deploy VMs Agent
 on:
   workflow_dispatch:
     inputs:
