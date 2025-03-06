@@ -1,26 +1,21 @@
 name: Deploy VMs (Workflow 1)
-
 on:
   workflow_dispatch:
     inputs:
-      tf_file:
-        description: "master/main.tf"
+      var_file:
+        description: "Variables file (within master directory)"
         required: true
-        default: "master/main.tf"
-
+        default: "variables.tfvars"
 jobs:
   deploy:
     runs-on: self-hosted
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Install OpenTofu
         run: |
           sudo snap install --classic opentofu
           tofu --version
-
       - name: Set up Kubernetes credentials
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
@@ -28,19 +23,19 @@ jobs:
           sudo mkdir -p /root/.kube
           echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
           sudo chmod 644 /root/.kube/config
-
       - name: Initialize OpenTofu
-        run: tofu init -chdir=master/
-
+        run: |
+          cd master/
+          tofu init
       - name: Apply OpenTofu Configuration
         env:
-          TF_FILE: ${{ github.event.inputs.tf_file }}
+          VAR_FILE: ${{ github.event.inputs.var_file }}
         run: |
-          tofu plan -var-file=master/$TF_FILE
-          tofu apply -auto-approve -var-file=master/$TF_FILE
-
+          cd master/
+          tofu plan -var-file=$VAR_FILE
+          tofu apply -auto-approve -var-file=$VAR_FILE
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: tofu-tfstate
-          path: tofu.tfstate
+          path: master/terraform.tfstate
