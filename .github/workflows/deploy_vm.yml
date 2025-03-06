@@ -6,7 +6,7 @@ on:
       tf_file:
         description: "master/main.tf"
         required: true
-        default: "main.tf"
+        default: "master/main.tf"
 
 jobs:
   deploy:
@@ -36,8 +36,8 @@ jobs:
         env:
           TF_FILE: ${{ github.event.inputs.tf_file }}
         run: |
-          tofu plan -var-file=$TF_FILE
-          tofu apply -auto-approve -var-file=$TF_FILE
+          tofu plan -var-file=master/$TF_FILE
+          tofu apply -auto-approve -var-file=master/$TF_FILE
 
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
