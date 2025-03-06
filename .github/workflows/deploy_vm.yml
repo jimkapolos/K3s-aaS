@@ -30,13 +30,13 @@ jobs:
           sudo chmod 644 /root/.kube/config
 
       - name: Initialize OpenTofu
-        run: tofu init -var-file=master/$TF_FILE
+        run: tofu init -var-file=$TF_FILE
 
       - name: Apply OpenTofu Configuration
         env:
           TF_FILE: ${{ github.event.inputs.tf_file }}
         run: |
-          tofu plan -var-file=master/$TF_FILE
+          tofu plan -var-file=$TF_FILE
           tofu apply -auto-approve -var-file=master/$TF_FILE
 
       - name: Upload tfstate as an artifact
