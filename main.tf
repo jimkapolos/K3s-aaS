@@ -135,11 +135,7 @@ write_files:
       cd /usr/local/bin && containerd-rootless-setuptool.sh install
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
-      sudo apt update
-      sudo apt install -y sshpass
-      export VM_IP=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@192.168.188.201 "IP_ADDRESS=\$(kubectl --kubeconfig=/home/apel/.kube/config get vmi k3s-master -o jsonpath='{.status.interfaces[0].ipAddress}'); export K3S_MASTER_IP=\$IP_ADDRESS; echo \$K3S_MASTER_IP")
-      export K3S_TOKEN=$(sudo cat /var/lib/rancher/k3s/server/node-token)
-      sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@150.140.187.77 "curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -"
+      
 
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
