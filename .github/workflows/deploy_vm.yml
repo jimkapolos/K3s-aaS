@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tf_file:
-        description: ""
+        description: "master/main.tf"
         required: true
         default: "main.tf"
 
