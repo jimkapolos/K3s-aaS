@@ -2,10 +2,10 @@ name: Deploy VMs
 on:
   workflow_dispatch:
     inputs:
-      vm_count:
-        description: "Number of VMs"
+      var_file:
+        description: "Variables file (within master directory)"
         required: true
-        default: "2"
+        default: "main.tf"
 jobs:
   deploy:
     runs-on: self-hosted
