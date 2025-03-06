@@ -24,9 +24,9 @@ jobs:
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}  # Κάνε use το GitHub Secret
         run: |
-          mkdir -p ~/.kube
-          echo "$KUBE_CONFIG" > ~/.kube/config
-          chmod 600 ~/.kube/config
+          mkdir -p /home/dkap/.kube
+          echo "$KUBE_CONFIG" > /home/dkap/.kube/config
+          chmod 600 /home/dkap/.kube/config
 
       - name: Initialize OpenTofu
         run: tofu init
