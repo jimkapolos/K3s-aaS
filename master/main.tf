@@ -1,4 +1,4 @@
-tofu {
+terraform {
   required_providers {
     kubevirt = {
       source  = "kubevirt/kubevirt"
@@ -10,7 +10,6 @@ tofu {
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
-
 
 resource "kubevirt_virtual_machine" "github-action" {
   metadata {
