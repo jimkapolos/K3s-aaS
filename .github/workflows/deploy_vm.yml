@@ -30,7 +30,7 @@ jobs:
           sudo chmod 644 /root/.kube/config
 
       - name: Initialize OpenTofu
-        run: tofu init -var-file=$TF_FILE
+        run: tofu init master/
 
       - name: Apply OpenTofu Configuration
         env:
