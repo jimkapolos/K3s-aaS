@@ -166,29 +166,4 @@ EOF
   }
 }
 
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "kubernetes-admin@kubernetes"
-}
 
-resource "kubernetes_service" "vmi_nodeport_service" {
-  metadata {
-    name      = "vmi-nodeport"
-    namespace = "default"
-  }
-
-  spec {
-    selector = {
-      "kubevirt.io/domain" = "k3s-master"
-    }
-
-    port {
-      protocol    = "TCP"
-      port        = 22
-      target_port = 22
-      node_port   = 30022
-    }
-
-    type = "NodePort"
-  }
-}
