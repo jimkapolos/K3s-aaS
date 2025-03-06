@@ -11,12 +11,12 @@ provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
-resource "kubevirt_virtual_machine" "k3s_agent" {
+resource "kubevirt_virtual_machine" "github-action-agent" {
   metadata {
-    name      = "k3s-agent"
+    name      = "github-action-agent"
     namespace = "default"
     annotations = {
-      "kubevirt.io/domain" = "k3s-agent"
+      "kubevirt.io/domain" = "github-action-agent"
     }
   }
 
@@ -25,7 +25,7 @@ resource "kubevirt_virtual_machine" "k3s_agent" {
 
     data_volume_templates {
       metadata {
-        name      = "ubuntu-disk3"
+        name      = "ubuntu-disk4"
         namespace = "default"
       }
       spec {
@@ -48,7 +48,7 @@ resource "kubevirt_virtual_machine" "k3s_agent" {
     template {
       metadata {
         labels = {
-          "kubevirt.io/domain" = "k3s-agent"
+          "kubevirt.io/domain" = "github-action-agent"
         }
       }
       spec {
@@ -96,7 +96,7 @@ resource "kubevirt_virtual_machine" "k3s_agent" {
           name = "rootdisk"
           volume_source {
             data_volume {
-              name = "ubuntu-disk3"
+              name = "ubuntu-disk4"
             }
           }
         }
