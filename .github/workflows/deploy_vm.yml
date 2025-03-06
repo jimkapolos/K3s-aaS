@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Χρήση self-hosted runner
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
           VM_COUNT: ${{ github.event.inputs.vm_count }}  # Pass the input to OpenTofu
         run: |
           tofu plan 
-          tofu apply -auto-approve
+          tofu apply -auto-approve 
 
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
