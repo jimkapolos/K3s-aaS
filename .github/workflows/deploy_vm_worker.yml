@@ -37,18 +37,29 @@ jobs:
           echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
           sudo chmod 644 /root/.kube/config
       
+      - name: Check OpenTofu files
+        run: |
+          echo "Current directory files:"
+          ls -la
+          echo "vm-test directory files:"
+          ls -la ./vm-test
+          echo "vm-test/master directory files:"
+          ls -la ./vm-test/master || echo "Master folder not found"
+      
       - name: Initialize OpenTofu
+        working-directory: ./vm-test/master
         run: tofu init
       
       - name: Apply OpenTofu Configuration
+        working-directory: ./vm-test/master
         env:
           VM_COUNT: ${{ github.event.inputs.vm_count }}
         run: |
-          tofu plan 
-          tofu apply -auto-approve 
+          tofu plan -var="vm_count=${VM_COUNT}"
+          tofu apply -auto-approve -var="vm_count=${VM_COUNT}"
       
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: tofu-tfstate
-          path: tofu.tfstate
+          path: ./vm-test/master/tofu.tfstate
