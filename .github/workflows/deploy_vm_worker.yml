@@ -55,8 +55,8 @@ jobs:
         env:
           VM_COUNT: ${{ github.event.inputs.vm_count }}
         run: |
-          tofu plan -var="vm_count=${VM_COUNT}"
-          tofu apply -auto-approve -var="vm_count=${VM_COUNT}"
+          tofu plan 
+          tofu apply -auto-approve 
       
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
