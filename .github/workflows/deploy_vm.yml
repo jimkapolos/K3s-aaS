@@ -5,7 +5,7 @@ on:
       var_file:
         description: "Variables file (within master directory)"
         required: true
-        default: "variables.tfvars"
+        default: "main.tf"
 jobs:
   deploy:
     runs-on: self-hosted
