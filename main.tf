@@ -12,12 +12,12 @@ provider "kubevirt" {
 }
 
 
-resource "kubevirt_virtual_machine" "k3s_master" {
+resource "kubevirt_virtual_machine" "github-action" {
   metadata {
-    name      = "k3s-master"
+    name      = "github-action"
     namespace = "default"
     annotations = {
-      "kubevirt.io/domain" = "k3s-master"
+      "kubevirt.io/domain" = "github-action"
     }
   }
 
@@ -26,7 +26,7 @@ resource "kubevirt_virtual_machine" "k3s_master" {
 
     data_volume_templates {
       metadata {
-        name      = "ubuntu-disk1"
+        name      = "ubuntu-disk4"
         namespace = "default"
       }
       spec {
@@ -49,7 +49,7 @@ resource "kubevirt_virtual_machine" "k3s_master" {
     template {
       metadata {
         labels = {
-          "kubevirt.io/domain" = "k3s-master"
+          "kubevirt.io/domain" = "github-action"
         }
       }
       spec {
@@ -97,7 +97,7 @@ resource "kubevirt_virtual_machine" "k3s_master" {
           name = "rootdisk"
           volume_source {
             data_volume {
-              name = "ubuntu-disk1"
+              name = "ubuntu-disk4"
             }
           }
         }
