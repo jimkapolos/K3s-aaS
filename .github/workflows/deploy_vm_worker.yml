@@ -4,16 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       vm_count:
-        description: "Number of VMs for the first action"
+        description: "Number of VMs"
         required: true
         default: "2"
-      vm_count_1:
-        description: "Number of VMs for the second action"
-        required: true
-        default: "3"
 
 jobs:
-  deploy_1:
+  deploy:
     runs-on: self-hosted
     steps:
       - name: Checkout repository
@@ -26,48 +22,24 @@ jobs:
 
       - name: Set up Kubernetes credentials
         env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}  # Κάνε use το GitHub Secret
         run: |
-          sudo mkdir -p /root/.kube
-          echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
-          sudo chmod 644 /root/.kube/config
+          sudo mkdir -p /root/.kube  # Δημιουργούμε το φάκελο για τον root χρήστη
+          echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null  # Εγγράφουμε το config ως root
+          sudo chmod 644 /root/.kube/config  # Ρυθμίζουμε τα δικαιώματα του αρχείου config
 
       - name: Initialize OpenTofu
         run: tofu init
 
-      - name: Apply OpenTofu Configuration for Action 1
+      - name: Apply OpenTofu Configuration
         env:
-          VM_COUNT: ${{ github.event.inputs.vm_count_1 }}
+          VM_COUNT: ${{ github.event.inputs.vm_count }}  # Pass the input to OpenTofu
         run: |
-          tofu plan
-          tofu apply -auto-approve
+          tofu plan 
+          tofu apply -auto-approve 
 
-  deploy_2:
-    runs-on: self-hosted
-    needs: deploy_1  # Wait for deploy_1 to finish before starting this job
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install OpenTofu
-        run: |
-          sudo snap install --classic opentofu
-          tofu --version
-
-      - name: Set up Kubernetes credentials
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        run: |
-          sudo mkdir -p /root/.kube
-          echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
-          sudo chmod 644 /root/.kube/config
-
-      - name: Initialize OpenTofu
-        run: tofu init
-
-      - name: Apply OpenTofu Configuration for Action 2
-        env:
-          VM_COUNT: ${{ github.event.inputs.vm_count_2 }}
-        run: |
-          tofu plan
-          tofu apply -auto-approve
+      - name: Upload tfstate as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tofu-tfstate
+          path: tofu.tfstate
