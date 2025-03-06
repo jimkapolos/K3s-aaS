@@ -16,12 +16,13 @@ jobs:
       - name: Checkout vm-test repository
         uses: actions/checkout@v4
         with:
-          repository: your-organization/vm-test
+          repository: ${{ github.repository_owner }}/vm-test
           path: vm-test
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: View master folder contents
         run: |
-          ls -la ./vm-test/master
+          ls -la ./vm-test/master || echo "Master folder not found in vm-test repository"
       
       - name: Install OpenTofu
         run: |
