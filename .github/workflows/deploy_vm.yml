@@ -20,6 +20,14 @@ jobs:
           sudo snap install --classic opentofu
           tofu --version
 
+      - name: Set up Kubernetes credentials
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}  # Κάνε use το GitHub Secret
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
       - name: Initialize OpenTofu
         run: tofu init
 
