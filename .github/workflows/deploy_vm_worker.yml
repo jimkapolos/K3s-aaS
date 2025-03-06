@@ -3,11 +3,11 @@ name: Deploy VMs
 on:
   workflow_dispatch:
     inputs:
-      vm_count_1:
+      vm_count:
         description: "Number of VMs for the first action"
         required: true
         default: "2"
-      vm_count_2:
+      vm_count_1:
         description: "Number of VMs for the second action"
         required: true
         default: "3"
