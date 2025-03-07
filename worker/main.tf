@@ -11,8 +11,44 @@ provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
+# Παίρνουμε την IP του master node
+data "external" "k3s_master_ip" {
+  program = ["bash", "-c", <<EOT
+kubectl get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}' | jq -R '{ "output": . }'
+EOT
+  ]
+}
 
+# Ανάκτηση του token από τον master node
+resource "null_resource" "get_k3s_token" {
+  provisioner "local-exec" {
+    command = <<EOT
+      sshpass -p 'apel1234' ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} 'sudo cat /var/lib/rancher/k3s/server/node-token' > ./node-token
+    EOT
+  }
+}
+
+# Διαβάζουμε το token που αποθηκεύσαμε στο τοπικό αρχείο
+data "local_file" "k3s_token" {
+  depends_on = [null_resource.get_k3s_token]
+  filename   = "./node-token"
+}
+
+output "k3s_master_ip" {
+  description = "The IP of the K3s master node VM"
+  value       = data.external.k3s_master_ip.result["output"]
+}
+
+output "k3s_token" {
+  description = "The token for joining worker nodes"
+  value       = data.local_file.k3s_token.content
+  sensitive   = true
+}
+
+# Δημιουργία του agent VM με δυναμικό cloud-init που περιλαμβάνει την IP και το token
 resource "kubevirt_virtual_machine" "github-action-agent" {
+  depends_on = [null_resource.get_k3s_token, data.local_file.k3s_token]
+  
   metadata {
     name      = "github-action-agent"
     namespace = "default"
@@ -127,10 +163,13 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      sudo apt-get install -y sshpass
-      export VM_IP=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@192.168.188.201 "IP_ADDRESS=\$(kubectl --kubeconfig=/home/apel/.kube/config get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}'); export K3S_MASTER_IP=\$IP_ADDRESS; echo \$K3S_MASTER_IP")
-      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no -p 30021 apel@192.168.188.201 "sudo cat /var/lib/rancher/k3s/server/node-token")
-      curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
+      sudo apt-get install -y sshpass curl
+      # Χρήση των τιμών που γνωρίζουμε ήδη από το Terraform
+      export K3S_MASTER_IP="${data.external.k3s_master_ip.result["output"]}"
+      export K3S_TOKEN="${data.local_file.k3s_token.content}"
+      echo "Using K3s Master IP: $K3S_MASTER_IP"
+      echo "K3s Token is configured"
+      curl -sfL https://get.k3s.io | K3S_URL=https://$K3S_MASTER_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
 
   - path: /etc/systemd/system/k3s-agent-setup.service
     permissions: "0644"
