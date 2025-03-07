@@ -185,7 +185,7 @@ resource "kubernetes_service" "github_nodeport_service" {
       protocol    = "TCP"
       port        = 22
       target_port = 22
-      node_port   = 30023
+      node_port   = 30021
     }
 
     type = "NodePort"
