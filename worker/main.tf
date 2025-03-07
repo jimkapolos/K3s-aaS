@@ -19,19 +19,74 @@ EOT
   ]
 }
 
-# Ανάκτηση του token από τον master node
-resource "null_resource" "get_k3s_token" {
+# Δημιουργία αρχείου SSH config για να παρακάμψουμε το StrictHostKeyChecking
+resource "local_file" "ssh_config" {
+  content  = <<-EOT
+    Host k3s-master
+      HostName ${data.external.k3s_master_ip.result["output"]}
+      User apel
+      StrictHostKeyChecking no
+      UserKnownHostsFile /dev/null
+  EOT
+  filename = "${path.module}/ssh_config"
+}
+
+# Δημιουργία script που θα λάβει το token χωρίς να χρειάζεται sshpass
+resource "local_file" "get_token_script" {
+  content  = <<-EOT
+    #!/bin/bash
+    # Δημιουργία προσωρινού αρχείου password
+    echo 'apel1234' > ${path.module}/temp_pass
+    chmod 600 ${path.module}/temp_pass
+    
+    # Χρήση του SSH με αρχείο password αντί για sshpass
+    ssh -F ${path.module}/ssh_config -o PasswordAuthentication=yes k3s-master 'sudo cat /var/lib/rancher/k3s/server/node-token' > ${path.module}/node-token
+    
+    # Καθαρισμός του αρχείου password
+    rm ${path.module}/temp_pass
+  EOT
+  filename = "${path.module}/get_token.sh"
+
   provisioner "local-exec" {
-    command = <<EOT
-      sshpass -p 'apel1234' ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} 'sudo cat /var/lib/rancher/k3s/server/node-token' > ./node-token
-    EOT
+    command = "chmod +x ${path.module}/get_token.sh"
+  }
+}
+
+# Εκτέλεση του script για να λάβει το token
+resource "null_resource" "get_k3s_token" {
+  depends_on = [local_file.get_token_script, local_file.ssh_config]
+  
+  provisioner "local-exec" {
+    command = "${path.module}/get_token.sh"
   }
 }
 
 # Διαβάζουμε το token που αποθηκεύσαμε στο τοπικό αρχείο
 data "local_file" "k3s_token" {
   depends_on = [null_resource.get_k3s_token]
-  filename   = "./node-token"
+  filename   = "${path.module}/node-token"
+}
+
+# Εναλλακτική προσέγγιση: Δημιουργία K3s agent setup script με hardcoded τιμές
+resource "local_file" "k3s_agent_setup" {
+  depends_on = [data.external.k3s_master_ip, data.local_file.k3s_token]
+  
+  content  = <<-EOT
+#!/bin/bash
+echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+sudo apt-get update
+sudo apt-get install -y curl
+
+# Τιμές από το Terraform
+export K3S_MASTER_IP="${data.external.k3s_master_ip.result["output"]}"
+export K3S_TOKEN="${data.local_file.k3s_token.content}"
+
+echo "Using K3s Master IP: $K3S_MASTER_IP"
+echo "K3s Token is configured"
+
+curl -sfL https://get.k3s.io | K3S_URL=https://$K3S_MASTER_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
+EOT
+  filename = "${path.module}/k3s_agent_setup.sh"
 }
 
 output "k3s_master_ip" {
@@ -45,9 +100,9 @@ output "k3s_token" {
   sensitive   = true
 }
 
-# Δημιουργία του agent VM με δυναμικό cloud-init που περιλαμβάνει την IP και το token
+# Δημιουργία του agent VM με δυναμικό cloud-init 
 resource "kubevirt_virtual_machine" "github-action-agent" {
-  depends_on = [null_resource.get_k3s_token, data.local_file.k3s_token]
+  depends_on = [local_file.k3s_agent_setup]
   
   metadata {
     name      = "github-action-agent"
@@ -163,12 +218,15 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      sudo apt-get install -y sshpass curl
-      # Χρήση των τιμών που γνωρίζουμε ήδη από το Terraform
+      sudo apt-get install -y curl
+      
+      # Τιμές από το Terraform - περνιούνται απευθείας στο cloud-init
       export K3S_MASTER_IP="${data.external.k3s_master_ip.result["output"]}"
       export K3S_TOKEN="${data.local_file.k3s_token.content}"
+      
       echo "Using K3s Master IP: $K3S_MASTER_IP"
       echo "K3s Token is configured"
+      
       curl -sfL https://get.k3s.io | K3S_URL=https://$K3S_MASTER_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
 
   - path: /etc/systemd/system/k3s-agent-setup.service
