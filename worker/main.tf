@@ -128,7 +128,7 @@ write_files:
       sudo apt-get update
       sudo apt-get install -y sshpass
       export VM_IP=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@192.168.188.201 "IP_ADDRESS=\$(kubectl --kubeconfig=/home/apel/.kube/config get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}'); export K3S_MASTER_IP=\$IP_ADDRESS; echo \$K3S_MASTER_IP")
-      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no -p 30023 apel@192.168.188.201 "sudo cat /var/lib/rancher/k3s/server/node-token")
+      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no -p 30021 apel@192.168.188.201 "sudo cat /var/lib/rancher/k3s/server/node-token")
       curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
 
   - path: /etc/systemd/system/k3s-agent-setup.service
