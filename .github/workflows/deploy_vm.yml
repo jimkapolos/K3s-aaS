@@ -1,65 +1,52 @@
-name: Deploy VMs
+name: Deploy VM Master
+
 on:
   workflow_dispatch:
     inputs:
       var_file:
-        description: "Variables file (within master directory)"
+        description: 'Terraform var file'
+        default: 'main.tf'
         required: true
-        default: "main.tf"
+
 jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - name: Checkout current repository
-        uses: actions/checkout@v4
-      
-      - name: Checkout vm-test repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
-          repository: ${{ github.repository_owner }}/vm-test
-          path: vm-test
-          token: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: View master folder contents
+          terraform_version: 1.0.0
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: Get outputs
+        id: tf-outputs
         run: |
-          ls -la ./vm-test/master || echo "Master folder not found in vm-test repository"
-      
-      - name: Install OpenTofu
-        run: |
-          sudo snap install --classic opentofu
-          tofu --version
-      
-      - name: Set up Kubernetes credentials
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-        run: |
-          sudo mkdir -p /root/.kube
-          echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
-          sudo chmod 644 /root/.kube/config
-      
-      - name: Check OpenTofu files
-        run: |
-          echo "Current directory files:"
-          ls -la
-          echo "vm-test directory files:"
-          ls -la ./vm-test
-          echo "vm-test/master directory files:"
-          ls -la ./vm-test/master || echo "Master folder not found"
-      
-      - name: Initialize OpenTofu
-        working-directory: ./vm-test/master
-        run: tofu init
-      
-      - name: Apply OpenTofu Configuration
-        working-directory: ./vm-test/master
-        env:
-          VM_COUNT: ${{ github.event.inputs.vm_count }}
-        run: |
-          tofu plan 
-          tofu apply -auto-approve 
-      
-      - name: Upload tfstate as an artifact
-        uses: actions/upload-artifact@v4
+          MASTER_IP=$(terraform output -raw master_ip)
+          K3S_TOKEN=$(terraform output -raw k3s_token)
+          
+          echo "MASTER_IP=$MASTER_IP" >> $GITHUB_ENV
+          echo "K3S_TOKEN=$K3S_TOKEN" >> $GITHUB_ENV
+          
+          # Αποθηκεύουμε τις τιμές σε αρχεία
+          echo $MASTER_IP > master_ip.txt
+          echo $K3S_TOKEN > k3s_token.txt
+          
+          # Εμφανίζουμε τις τιμές (χωρίς ευαίσθητα δεδομένα σε logs)
+          echo "Master IP: $MASTER_IP"
+          echo "K3s Token: [SENSITIVE]"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
         with:
-          name: tofu-tfstate
-          path: ./vm-test/master/tofu.tfstate
+          name: k3s-config
+          path: |
+            master_ip.txt
+            k3s_token.txt
