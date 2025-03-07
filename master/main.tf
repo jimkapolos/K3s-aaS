@@ -19,10 +19,10 @@ resource "kubevirt_virtual_machine" "github-action" {
       "kubevirt.io/domain" = "github-action"
     }
   }
-  
-  # Make sure to include the spec block as in your original configuration
+
   spec {
     run_strategy = "Always"
+
     data_volume_templates {
       metadata {
         name      = "ubuntu-disk4"
@@ -44,6 +44,7 @@ resource "kubevirt_virtual_machine" "github-action" {
         }
       }
     }
+
     template {
       metadata {
         labels = {
@@ -61,6 +62,7 @@ resource "kubevirt_virtual_machine" "github-action" {
                 }
               }
             }
+
             disk {
               name = "cloudinitdisk"
               disk_device {
@@ -69,6 +71,7 @@ resource "kubevirt_virtual_machine" "github-action" {
                 }
               }
             }
+
             interface {
               name                     = "default"
               interface_binding_method = "InterfaceMasquerade"
@@ -81,12 +84,14 @@ resource "kubevirt_virtual_machine" "github-action" {
             }
           }
         }
+
         network {
           name = "default"
           network_source {
             pod {}
           }
         }
+
         volume {
           name = "rootdisk"
           volume_source {
@@ -95,6 +100,7 @@ resource "kubevirt_virtual_machine" "github-action" {
             }
           }
         }
+
         volume {
           name = "cloudinitdisk"
           volume_source {
@@ -112,6 +118,7 @@ chpasswd:
   list: |
     apel:apel1234
   expire: false
+
 write_files:
   - path: /usr/local/bin/k3s-setup.sh
     permissions: "0755"
@@ -128,6 +135,7 @@ write_files:
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
       
+
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
     content: |
@@ -135,12 +143,15 @@ write_files:
       Description=Setup K3s Master Node
       After=network.target
       Wants=network-online.target
+
       [Service]
       Type=oneshot
       ExecStart=/usr/local/bin/k3s-setup.sh
       RemainAfterExit=true
+
       [Install]
       WantedBy=multi-user.target
+
 runcmd:
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
@@ -154,83 +165,4 @@ EOF
   }
 }
 
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "kubernetes-admin@kubernetes"
-}
 
-resource "kubernetes_service" "github_nodeport_service" {
-  metadata {
-    name      = "github-nodeport"
-    namespace = "default"
-  }
-
-  spec {
-    selector = {
-      "kubevirt.io/domain" = "github-action"
-    }
-
-    port {
-      protocol    = "TCP"
-      port        = 22
-      target_port = 22
-      node_port   = 30023
-    }
-
-    type = "NodePort"
-  }
-}
-
-# Add the null_resource for getting the master information
-resource "null_resource" "get_master_info" {
-  depends_on = [kubevirt_virtual_machine.github-action]
-
-  # This will run after the VM is created
-  provisioner "local-exec" {
-    command = <<-EOT
-      # Wait for the VM to be ready
-      echo "Waiting for VM to be ready..."
-      kubectl wait --for=condition=Ready vm/github-action --timeout=300s
-      
-      # Wait a bit more for K3s to be fully initialized
-      sleep 120
-      
-      # Get the VM IP
-      VM_IP=$(kubectl get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}')
-      
-      # Wait until SSH is available
-      until ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 apel@$VM_IP "echo SSH is up"; do
-        echo "Waiting for SSH to be available..."
-        sleep 10
-      done
-      
-      # Get the K3s token
-      K3S_TOKEN=$(ssh -o StrictHostKeyChecking=no apel@$VM_IP "sudo cat /var/lib/rancher/k3s/server/node-token")
-      
-      # Save the information to files that will be used by the output
-      echo $VM_IP > vm_ip.txt
-      echo $K3S_TOKEN > k3s_token.txt
-    EOT
-  }
-}
-
-# Read the IP and token from the files created by the null_resource
-data "local_file" "vm_ip" {
-  depends_on = [null_resource.get_master_info]
-  filename   = "vm_ip.txt"
-}
-
-data "local_file" "k3s_token" {
-  depends_on = [null_resource.get_master_info]
-  filename   = "k3s_token.txt"
-}
-
-# Output the IP and token
-output "master_ip" {
-  value = trimspace(data.local_file.vm_ip.content)
-}
-
-output "k3s_token" {
-  value     = trimspace(data.local_file.k3s_token.content)
-  sensitive = true  # Mark as sensitive to prevent showing in logs
-}
