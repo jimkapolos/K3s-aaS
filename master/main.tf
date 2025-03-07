@@ -192,3 +192,43 @@ resource "kubernetes_service" "github_nodeport_service" {
   }
 }
 
+data "external" "github_action_ip" {
+  program = ["bash", "-c", <<EOT
+kubectl get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}' | jq -R '{ "output": . }'
+EOT
+  ]
+}
+
+
+
+resource "null_resource" "get_github_action_token" {
+  depends_on  = [kubevirt_virtual_machine.github-action]
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo cat /var/lib/rancher/k3s/server/node-token > /tmp/github-action-token"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "apel"
+      password    = "apel1234"
+      host        = data.external.github_action_ip.result["output"]
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "sleep 10; sshpass -p 'apel1234' ssh -o StrictHostKeyChecking=no apel@${data.external.github_action_ip.result["output"]} 'sudo cat /var/lib/rancher/k3s/server/node-token' > ./github-action-token"
+  }
+}
+
+output "github_action_ip" {
+  description = "The IP of the github-action VM"
+  value       = data.external.github_action_ip.result["output"]
+}
+
+output "github_action_token" {
+  description = "The token for the github-action VM"
+  value       = fileexists("./github-action-token") ? file("./github-action-token") : "Token not available yet"
+  sensitive   = true
+}
