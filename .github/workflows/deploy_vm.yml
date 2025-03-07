@@ -57,28 +57,9 @@ jobs:
         run: |
           tofu plan 
           tofu apply -auto-approve 
-
-      - name: Get outputs
-        id: tf-outputs
-        run: |
-          MASTER_IP=$(terraform output -raw master_ip)
-          K3S_TOKEN=$(terraform output -raw k3s_token)
-          
-          echo "MASTER_IP=$MASTER_IP" >> $GITHUB_ENV
-          echo "K3S_TOKEN=$K3S_TOKEN" >> $GITHUB_ENV
-          
-          # Αποθηκεύουμε τις τιμές σε αρχεία
-          echo $MASTER_IP > master_ip.txt
-          echo $K3S_TOKEN > k3s_token.txt
-          
-          # Εμφανίζουμε τις τιμές (χωρίς ευαίσθητα δεδομένα σε logs)
-          echo "Master IP: $MASTER_IP"
-          echo "K3s Token: [SENSITIVE]"
-
-      - name: Upload artifacts
+      
+      - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: k3s-config
-          path: |
-            master_ip.txt
-            k3s_token.txt
+          name: tofu-tfstate
+          path: ./vm-test/master/tofu.tfstate
