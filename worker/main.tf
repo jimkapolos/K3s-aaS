@@ -1,4 +1,3 @@
-# worker/main.tf
 terraform {
   required_providers {
     kubevirt = {
@@ -6,22 +5,10 @@ terraform {
       version = "0.0.1"
     }
   }
-  # Add backend configuration to access state from master
-  backend "local" {
-    path = "../master/terraform.tfstate"
-  }
 }
 
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
-}
-
-# Get master outputs from the terraform state
-data "terraform_remote_state" "master" {
-  backend = "local"
-  config = {
-    path = "../master/terraform.tfstate"
-  }
 }
 
 resource "kubevirt_virtual_machine" "github-action-agent" {
@@ -32,8 +19,10 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
       "kubevirt.io/domain" = "github-action-agent"
     }
   }
+
   spec {
     run_strategy = "Always"
+
     data_volume_templates {
       metadata {
         name      = "ubuntu-disk5"
@@ -55,6 +44,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
         }
       }
     }
+
     template {
       metadata {
         labels = {
@@ -72,6 +62,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
                 }
               }
             }
+
             disk {
               name = "cloudinitdisk"
               disk_device {
@@ -80,6 +71,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
                 }
               }
             }
+
             interface {
               name                     = "default"
               interface_binding_method = "InterfaceMasquerade"
@@ -92,12 +84,14 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
             }
           }
         }
+
         network {
           name = "default"
           network_source {
             pod {}
           }
         }
+
         volume {
           name = "rootdisk"
           volume_source {
@@ -106,6 +100,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
             }
           }
         }
+
         volume {
           name = "cloudinitdisk"
           volume_source {
@@ -123,6 +118,7 @@ chpasswd:
   list: |
     apel:apel1234
   expire: false
+
 write_files:
   - path: /usr/local/bin/k3s-agent-setup.sh
     permissions: "0755"
@@ -131,9 +127,10 @@ write_files:
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
       sudo apt-get install -y sshpass
-      export VM_IP="${data.terraform_remote_state.master.outputs.master_ip}"
-      export K3S_TOKEN="${data.terraform_remote_state.master.outputs.k3s_token}"
+      export VM_IP=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@192.168.188.201 "IP_ADDRESS=\$(kubectl --kubeconfig=/home/apel/.kube/config get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}'); export K3S_MASTER_IP=\$IP_ADDRESS; echo \$K3S_MASTER_IP")
+      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no -p 30023 apel@192.168.188.201 "sudo cat /var/lib/rancher/k3s/server/node-token")
       curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
+
   - path: /etc/systemd/system/k3s-agent-setup.service
     permissions: "0644"
     content: |
@@ -141,12 +138,15 @@ write_files:
       Description=Setup K3s Agent Node
       After=network.target
       Wants=network-online.target
+
       [Service]
       Type=oneshot
       ExecStart=/usr/local/bin/k3s-agent-setup.sh
       RemainAfterExit=true
+
       [Install]
       WantedBy=multi-user.target
+
 runcmd:
   - systemctl daemon-reload
   - systemctl enable k3s-agent-setup.service
