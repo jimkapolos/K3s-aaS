@@ -25,7 +25,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
 
     data_volume_templates {
       metadata {
-        name      = "ubuntu-disk4"
+        name      = "ubuntu-disk5"
         namespace = "default"
       }
       spec {
@@ -96,7 +96,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
           name = "rootdisk"
           volume_source {
             data_volume {
-              name = "ubuntu-disk4"
+              name = "ubuntu-disk5"
             }
           }
         }
