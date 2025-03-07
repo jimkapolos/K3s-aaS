@@ -165,4 +165,30 @@ EOF
   }
 }
 
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+  config_context = "kubernetes-admin@kubernetes"
+}
+
+resource "kubernetes_service" "github_nodeport_service" {
+  metadata {
+    name      = "github-nodeport"
+    namespace = "default"
+  }
+
+  spec {
+    selector = {
+      "kubevirt.io/domain" = "github-action"
+    }
+
+    port {
+      protocol    = "TCP"
+      port        = 22
+      target_port = 22
+      node_port   = 30023
+    }
+
+    type = "NodePort"
+  }
+}
 
