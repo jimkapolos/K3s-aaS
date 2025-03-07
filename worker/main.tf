@@ -1,3 +1,4 @@
+# worker/main.tf
 terraform {
   required_providers {
     kubevirt = {
@@ -5,22 +6,22 @@ terraform {
       version = "0.0.1"
     }
   }
+  # Add backend configuration to access state from master
+  backend "local" {
+    path = "../master/terraform.tfstate"
+  }
 }
 
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
-# Μεταβλητές για την IP και το token του master
-variable "master_ip" {
-  description = "The IP address of the K3s master node"
-  type        = string
-}
-
-variable "k3s_token" {
-  description = "The K3s token for agent nodes to join the cluster"
-  type        = string
-  sensitive   = true
+# Get master outputs from the terraform state
+data "terraform_remote_state" "master" {
+  backend = "local"
+  config = {
+    path = "../master/terraform.tfstate"
+  }
 }
 
 resource "kubevirt_virtual_machine" "github-action-agent" {
@@ -130,8 +131,8 @@ write_files:
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
       sudo apt-get install -y sshpass
-      export VM_IP="${var.master_ip}"
-      export K3S_TOKEN="${var.k3s_token}"
+      export VM_IP="${data.terraform_remote_state.master.outputs.master_ip}"
+      export K3S_TOKEN="${data.terraform_remote_state.master.outputs.k3s_token}"
       curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
   - path: /etc/systemd/system/k3s-agent-setup.service
     permissions: "0644"
