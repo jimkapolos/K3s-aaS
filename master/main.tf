@@ -6,11 +6,9 @@ terraform {
     }
   }
 }
-
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
-
 resource "kubevirt_virtual_machine" "github-action" {
   metadata {
     name      = "github-action"
@@ -19,10 +17,8 @@ resource "kubevirt_virtual_machine" "github-action" {
       "kubevirt.io/domain" = "github-action"
     }
   }
-
   spec {
     run_strategy = "Always"
-
     data_volume_templates {
       metadata {
         name      = "ubuntu-disk4"
@@ -44,7 +40,6 @@ resource "kubevirt_virtual_machine" "github-action" {
         }
       }
     }
-
     template {
       metadata {
         labels = {
@@ -62,7 +57,6 @@ resource "kubevirt_virtual_machine" "github-action" {
                 }
               }
             }
-
             disk {
               name = "cloudinitdisk"
               disk_device {
@@ -71,7 +65,6 @@ resource "kubevirt_virtual_machine" "github-action" {
                 }
               }
             }
-
             interface {
               name                     = "default"
               interface_binding_method = "InterfaceMasquerade"
@@ -84,14 +77,12 @@ resource "kubevirt_virtual_machine" "github-action" {
             }
           }
         }
-
         network {
           name = "default"
           network_source {
             pod {}
           }
         }
-
         volume {
           name = "rootdisk"
           volume_source {
@@ -100,7 +91,6 @@ resource "kubevirt_virtual_machine" "github-action" {
             }
           }
         }
-
         volume {
           name = "cloudinitdisk"
           volume_source {
@@ -118,7 +108,6 @@ chpasswd:
   list: |
     apel:apel1234
   expire: false
-
 write_files:
   - path: /usr/local/bin/k3s-setup.sh
     permissions: "0755"
@@ -135,7 +124,6 @@ write_files:
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
       
-
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
     content: |
@@ -143,15 +131,12 @@ write_files:
       Description=Setup K3s Master Node
       After=network.target
       Wants=network-online.target
-
       [Service]
       Type=oneshot
       ExecStart=/usr/local/bin/k3s-setup.sh
       RemainAfterExit=true
-
       [Install]
       WantedBy=multi-user.target
-
 runcmd:
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
@@ -165,4 +150,24 @@ EOF
   }
 }
 
+# Προσθήκη outputs για την IP και το token
+data "external" "master_ip" {
+  program = ["bash", "-c", "sleep 180 && kubectl get vmi github-action -o jsonpath='{\"ip\":\"{.status.interfaces[0].ipAddress}\"}' || echo '{\"ip\":\"pending\"}'"]
+  depends_on = [kubevirt_virtual_machine.github-action]
+}
 
+data "external" "k3s_token" {
+  program = ["bash", "-c", "sleep 200 && ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 apel@$(kubectl get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}') 'sudo cat /var/lib/rancher/k3s/server/node-token 2>/dev/null' | jq -R '{token: .}' || echo '{\"token\":\"pending\"}'"]
+  depends_on = [data.external.master_ip]
+}
+
+output "master_ip" {
+  value = data.external.master_ip.result.ip
+  description = "The IP address of the K3s master node"
+}
+
+output "k3s_token" {
+  value = data.external.k3s_token.result.token
+  description = "The K3s token for agent nodes to join the cluster"
+  sensitive = true
+}
