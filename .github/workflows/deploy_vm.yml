@@ -1,4 +1,4 @@
-name: Deploy VMs
+name: Deploy VMs Master
 on:
   workflow_dispatch:
     inputs:
