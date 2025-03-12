@@ -23,7 +23,7 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-resource "kubevirt_virtual_machine" "github-action-master-${var.namespace}" {
+resource "kubevirt_virtual_machine" "github-action-master" {
   metadata {
     name      = "github-action-master-${var.namespace}"
     namespace = var.namespace
