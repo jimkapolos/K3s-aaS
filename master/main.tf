@@ -1,3 +1,4 @@
+# master.tf
 terraform {
   required_providers {
     kubevirt = {
@@ -5,7 +6,6 @@ terraform {
       version = "0.0.1"
     }
   }
-}
 
 variable "namespace" {
   description = "The namespace to deploy resources"
@@ -14,6 +14,11 @@ variable "namespace" {
 }
 
 provider "kubevirt" {
+  config_context = "kubernetes-admin@kubernetes"
+}
+
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
   config_context = "kubernetes-admin@kubernetes"
 }
 
@@ -146,6 +151,16 @@ write_files:
       cd /usr/local/bin && containerd-rootless-setuptool.sh install
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
+      
+      # Εξαγωγή των δεδομένων που χρειάζονται στους workers
+      # Αποθήκευση IP, token και kubeconfig σε αρχεία
+      IP_ADDRESS=$(hostname -I | awk '{print $1}')
+      echo "$IP_ADDRESS" > /home/apel/master_ip.txt
+      sudo cat /var/lib/rancher/k3s/server/node-token > /home/apel/k3s_token.txt
+      sudo cp /etc/rancher/k3s/k3s.yaml /home/apel/k3s_config.yaml
+      sudo sed -i "s/127.0.0.1/$IP_ADDRESS/g" /home/apel/k3s_config.yaml
+      sudo chown apel:apel /home/apel/master_ip.txt /home/apel/k3s_token.txt /home/apel/k3s_config.yaml
+      sudo chmod 644 /home/apel/master_ip.txt /home/apel/k3s_token.txt /home/apel/k3s_config.yaml
 
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
@@ -176,11 +191,6 @@ EOF
   }
 }
 
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "kubernetes-admin@kubernetes"
-}
-
 resource "kubernetes_service" "github_nodeport_service" {
   metadata {
     name      = "github-master-${var.namespace}-nodeport"
@@ -201,4 +211,47 @@ resource "kubernetes_service" "github_nodeport_service" {
 
     type = "NodePort"
   }
+}
+
+# Εξάγουμε την IP του master VM
+data "kubernetes_resource" "github_master_vm_ip" {
+  depends_on = [kubevirt_virtual_machine.github-action-master]
+  
+  api_version = "kubevirt.io/v1"
+  kind        = "VirtualMachineInstance"
+  
+  metadata {
+    name      = "github-action-master-${var.namespace}"
+    namespace = var.namespace
+  }
+
+  timeouts {
+    read = "10m"
+  }
+}
+
+# Εξάγουμε το namespace, master_ip, και nodeport ως outputs
+output "namespace" {
+  value = var.namespace
+  description = "The namespace used for deployment"
+}
+
+output "master_ip" {
+  value = jsondecode(data.kubernetes_resource.github_master_vm_ip.manifest).status.interfaces[0].ipAddress
+  description = "The IP address of the master node"
+}
+
+output "master_nodeport" {
+  value = kubernetes_service.github_nodeport_service.spec[0].port[0].node_port
+  description = "The NodePort for SSH access to the master"
+}
+
+# Προαιρετικά: Γράφουμε τα outputs σε ένα τοπικό αρχείο για εύκολη πρόσβαση
+resource "local_file" "k3s_info" {
+  content = jsonencode({
+    namespace = var.namespace
+    master_ip = jsondecode(data.kubernetes_resource.github_master_vm_ip.manifest).status.interfaces[0].ipAddress
+    master_nodeport = kubernetes_service.github_nodeport_service.spec[0].port[0].node_port
+  })
+  filename = "${path.module}/k3s_info.json"
 }
