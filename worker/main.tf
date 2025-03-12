@@ -13,6 +13,11 @@ variable "namespace" {
   default     = "default"
 }
 
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+  config_context = "kubernetes-admin@kubernetes"
+}
+
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
