@@ -7,15 +7,26 @@ terraform {
   }
 }
 
+variable "namespace" {
+  description = "The namespace to deploy resources"
+  type        = string
+  default     = "default"
+}
+
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
+resource "kubernetes_namespace" "namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
 
 resource "kubevirt_virtual_machine" "github-action-agent" {
   metadata {
     name      = "github-action-agent"
-    namespace = "default"
+    namespace = var.namespace
     annotations = {
       "kubevirt.io/domain" = "github-action-agent"
     }
@@ -26,8 +37,8 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
 
     data_volume_templates {
       metadata {
-        name      = "ubuntu-disk5"
-        namespace = "default"
+        name      = "ubuntu-disk-worker"
+        namespace = var.namespace
       }
       spec {
         pvc {
@@ -97,7 +108,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
           name = "rootdisk"
           volume_source {
             data_volume {
-              name = "ubuntu-disk5"
+              name = "ubuntu-disk-worker"
             }
           }
         }
