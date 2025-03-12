@@ -7,14 +7,26 @@ terraform {
   }
 }
 
+variable "namespace" {
+  description = "The namespace to deploy resources"
+  type        = string
+  default     = "default"
+}
+
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
+}
+
+resource "kubernetes_namespace" "namespace" {
+  metadata {
+    name = var.namespace
+  }
 }
 
 resource "kubevirt_virtual_machine" "github-action" {
   metadata {
     name      = "github-action"
-    namespace = "default"
+    namespace = var.namespace
     annotations = {
       "kubevirt.io/domain" = "github-action"
     }
@@ -26,7 +38,7 @@ resource "kubevirt_virtual_machine" "github-action" {
     data_volume_templates {
       metadata {
         name      = "ubuntu-disk4"
-        namespace = "default"
+        namespace = var.namespace
       }
       spec {
         pvc {
@@ -134,7 +146,6 @@ write_files:
       cd /usr/local/bin && containerd-rootless-setuptool.sh install
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
-      
 
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
@@ -173,7 +184,7 @@ provider "kubernetes" {
 resource "kubernetes_service" "github_nodeport_service" {
   metadata {
     name      = "github-nodeport"
-    namespace = "default"
+    namespace = var.namespace
   }
 
   spec {
@@ -191,4 +202,3 @@ resource "kubernetes_service" "github_nodeport_service" {
     type = "NodePort"
   }
 }
-
