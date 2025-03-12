@@ -28,12 +28,12 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-resource "kubevirt_virtual_machine" "github-action-agent" {
+resource "kubevirt_virtual_machine" "github-action-agent-${var.namespace}" {
   metadata {
-    name      = "github-action-agent"
+    name      = "github-action-agent-${var.namespace}"
     namespace = var.namespace
     annotations = {
-      "kubevirt.io/domain" = "github-action-agent"
+      "kubevirt.io/domain" = "github-action-agent-${var.namespace}"
     }
   }
 
@@ -42,7 +42,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
 
     data_volume_templates {
       metadata {
-        name      = "ubuntu-disk-worker"
+        name      = "ubuntu-disk-worker-${var.namespace}"
         namespace = var.namespace
       }
       spec {
@@ -65,7 +65,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
     template {
       metadata {
         labels = {
-          "kubevirt.io/domain" = "github-action-agent"
+          "kubevirt.io/domain" = "github-action-agent-${var.namespace}"
         }
       }
       spec {
@@ -113,7 +113,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
           name = "rootdisk"
           volume_source {
             data_volume {
-              name = "ubuntu-disk-worker"
+              name = "ubuntu-disk-worker-${var.namespace}"
             }
           }
         }
@@ -144,8 +144,8 @@ write_files:
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
       sudo apt-get install -y sshpass
-      export VM_IP=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@192.168.188.201 "IP_ADDRESS=\$(kubectl --kubeconfig=/home/apel/.kube/config get vmi github-action -o jsonpath='{.status.interfaces[0].ipAddress}'); export K3S_MASTER_IP=\$IP_ADDRESS; echo \$K3S_MASTER_IP")
-      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no -p 30021 apel@192.168.188.201 "sudo cat /var/lib/rancher/k3s/server/node-token")
+      export VM_IP=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@192.168.188.201 "IP_ADDRESS=\$(kubectl --kubeconfig=/home/apel/.kube/config get vmi github-action-master-${var.namespace} -n ${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}'); export K3S_MASTER_IP=\$IP_ADDRESS; echo \$K3S_MASTER_IP")
+      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no  apel@$VM_IP "sudo cat /var/lib/rancher/k3s/server/node-token")
       curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
 
   - path: /etc/systemd/system/k3s-agent-setup.service
