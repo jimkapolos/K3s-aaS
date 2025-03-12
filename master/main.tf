@@ -23,12 +23,12 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-resource "kubevirt_virtual_machine" "github-action" {
+resource "kubevirt_virtual_machine" "github-action-master-${var.namespace}" {
   metadata {
-    name      = "github-action"
+    name      = "github-action-master-${var.namespace}"
     namespace = var.namespace
     annotations = {
-      "kubevirt.io/domain" = "github-action"
+      "kubevirt.io/domain" = "github-action-master-${var.namespace}"
     }
   }
 
@@ -37,7 +37,7 @@ resource "kubevirt_virtual_machine" "github-action" {
 
     data_volume_templates {
       metadata {
-        name      = "ubuntu-disk-master"
+        name      = "ubuntu-disk-master-${var.namespace}"
         namespace = var.namespace
       }
       spec {
@@ -60,7 +60,7 @@ resource "kubevirt_virtual_machine" "github-action" {
     template {
       metadata {
         labels = {
-          "kubevirt.io/domain" = "github-action"
+          "kubevirt.io/domain" = "github-action-master-${var.namespace}"
         }
       }
       spec {
@@ -108,7 +108,7 @@ resource "kubevirt_virtual_machine" "github-action" {
           name = "rootdisk"
           volume_source {
             data_volume {
-              name = "ubuntu-disk-master"
+              name = "ubuntu-disk-master-${var.namespace}"
             }
           }
         }
@@ -183,13 +183,13 @@ provider "kubernetes" {
 
 resource "kubernetes_service" "github_nodeport_service" {
   metadata {
-    name      = "github-nodeport"
+    name      = "github-master-${var.namespace}-nodeport"
     namespace = var.namespace
   }
 
   spec {
     selector = {
-      "kubevirt.io/domain" = "github-action"
+      "kubevirt.io/domain" = "github-action-master-${var.namespace}"
     }
 
     port {
