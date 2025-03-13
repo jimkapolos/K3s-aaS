@@ -45,6 +45,19 @@ jobs:
           ls -la ./vm-test
           echo "vm-test/master directory files:"
           ls -la ./vm-test/worker || echo "Master folder not found"
+
+      - name: Download Master Outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: master-outputs
+          path: ./vm-test/worker
+
+      - name: Extract Master Info
+        working-directory: ./vm-test/worker
+        run: |
+          echo "MASTER_IP=$(tofu output -raw master_ip)" >> $GITHUB_ENV
+          echo "JOIN_TOKEN=$(tofu output -raw join_token)" >> $GITHUB_ENV
+
       
       - name: Initialize OpenTofu
         working-directory: ./vm-test/worker
@@ -56,7 +69,7 @@ jobs:
           VM_COUNT: ${{ github.event.inputs.vm_count }}
         run: |
           tofu plan 
-          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}"
+          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var "master_ip=${{ env.MASTER_IP }}" -var "join_token=${{ env.JOIN_TOKEN }}"
       
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
