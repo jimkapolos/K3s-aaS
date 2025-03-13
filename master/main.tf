@@ -203,20 +203,24 @@ resource "kubernetes_service" "github_nodeport_service" {
   }
 }
 
-data "external" "k3s_master_token" {
+data "external" "k3s_master_ip" {
   depends_on = [kubevirt_virtual_machine.github-action-master]
 
   program = ["bash", "-c", <<EOT
 while true; do
   IP=$(kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}')
   if [ -n "$IP" ]; then
+    echo "{ \"output\": \"$IP\" }"
+    exit 0
+  fi
+  echo "Waiting for VM to get an IP..."
+  if [ -n "$IP" ]; then
     TOKEN=$(ssh -p "apel1234" -o StrictHostKeyChecking=no apel@$IP "cat /var/lib/rancher/k3s/server/node-token")
     if [ -n "$TOKEN" ]; then
       echo "{ \"output\": \"$TOKEN\" }"
       exit 0
     fi
-  fi
-  echo "Waiting for VM to get an IP and token..."
+    echo "Waiting for VM to get an token..."
   sleep 10
 done
 EOT
@@ -230,5 +234,4 @@ output "k3s_master_ip" {
 output "k3s_master_token" {
   value = data.external.k3s_master_token.result["output"]
 }
-
 
