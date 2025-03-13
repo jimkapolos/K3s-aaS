@@ -224,11 +224,11 @@ EOT
 }
 
 output "k3s_master_ip" {
-  value = data.external.k3s_master_info.result["ip"]
+  value = data.external.k3s_master_ip.result["output"]
 }
 
 output "k3s_master_token" {
-  value = data.external.k3s_master_token.result["token"]
+  value = data.external.k3s_master_token.result["output"]
 }
 
 
