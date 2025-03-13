@@ -61,15 +61,17 @@ jobs:
       - name: Extract Master VM Info
         working-directory: ./vm-test/master
         run: |
-          echo "MASTER_IP=$(tofu output -raw master_ip)" >> $GITHUB_ENV
-          echo "JOIN_TOKEN=$(tofu output -raw join_token)" >> $GITHUB_ENV
-          echo "$(< kubeconfig)" > kubeconfig.yml
+          echo "MASTER_IP=$(tofu output -raw master_ip)" > master-outputs.env
+          echo "JOIN_TOKEN=$(tofu output -raw join_token)" >> master-outputs.env
+          tofu output -raw kubeconfig > kubeconfig.yml
 
-      - name: Upload kubeconfig
+      - name: Upload Master Outputs
         uses: actions/upload-artifact@v4
         with:
-          name: kubeconfig
-          path: ./vm-test/master/kubeconfig.yml
+          name: master-outputs
+          path: |
+            ./vm-test/master/master-outputs.env
+            ./vm-test/master/kubeconfig.yml
       
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
