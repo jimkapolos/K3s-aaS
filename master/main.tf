@@ -203,16 +203,20 @@ resource "kubernetes_service" "github_nodeport_service" {
   }
 }
 
-output "master_ip" {
-  value = aws_instance.master_vm.public_ip
+output "master_ip_command" {
+  value = "Για να πάρεις την IP του master: kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ip}'"
 }
 
-output "kubeconfig" {
-  value = file("${path.module}/kubeconfig")
-  sensitive = true
+output "kubeconfig_command" {
+  value = <<EOT
+Για να πάρεις το kubeconfig και να το αποθηκεύσεις τοπικά:
+kubectl get secret -n kube-system k3s -o jsonpath='{.data.config}' | base64 --decode > kubeconfig
+EOT
 }
 
-output "join_token" {
-  value = file("${path.module}/token")
-  sensitive = true
+output "join_token_command" {
+  value = <<EOT
+Για να πάρεις το token:
+kubectl get svc -n ${var.namespace} github-master-${var.namespace}-nodeport -o jsonpath='{.spec.clusterIP}' | xargs -I {} ssh apel@{} 'sudo cat /var/lib/rancher/k3s/server/node-token'
+EOT
 }
