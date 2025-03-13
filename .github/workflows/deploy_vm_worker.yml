@@ -82,7 +82,7 @@ jobs:
           VM_COUNT: ${{ github.event.inputs.vm_count }}
         run: |
           tofu plan 
-          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var "master_ip=${{ env.MASTER_IP }}"
+          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${{ env.MASTER_IP }}"
           
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
