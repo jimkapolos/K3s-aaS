@@ -13,6 +13,16 @@ variable "namespace" {
   default     = "default"
 }
 
+variable "master_ip" {
+  description = "IP του master VM"
+  type        = string
+}
+
+variable "join_token" {
+  description = "Token για την ένταξη στο cluster"
+  type        = string
+}
+
 provider "kubernetes" {
   config_path    = "~/.kube/config"
   config_context = "kubernetes-admin@kubernetes"
@@ -27,6 +37,7 @@ resource "kubernetes_namespace" "namespace" {
     name = var.namespace
   }
 }
+
 
 resource "kubevirt_virtual_machine" "github-action-agent" {
   metadata {
