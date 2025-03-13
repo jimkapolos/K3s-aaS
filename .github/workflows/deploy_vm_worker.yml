@@ -37,18 +37,20 @@ jobs:
           echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
           sudo chmod 644 /root/.kube/config
 
+
       - name: Find latest run ID of Deploy VMs Master
         id: get-latest-run
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}  # Χρήση του νέου token
         run: |
           RUN_ID=$(gh run list --workflow "Deploy VMs Master" --json databaseId --jq '.[0].databaseId')
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Download Master Outputs from latest run
         uses: dawidd6/action-download-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           run_id: ${{ env.RUN_ID }}
           name: master-outputs
           path: ./vm-test/worker
