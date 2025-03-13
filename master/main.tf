@@ -204,20 +204,3 @@ resource "kubernetes_service" "github_nodeport_service" {
 }
 
 
-data "external" "k3s_master_ip" {
-  program = ["bash", "-c", <<EOT
-kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}' | jq -R '{ "output": . }'
-EOT
-  ]
-}
-
-output "k3s_master_ip" {
-  value = data.external.k3s_master_ip.result["output"]
-}
-
-output "join_token_command" {
-  value = <<EOT
-Για να πάρεις το token:
-kubectl get svc -n ${var.namespace} github-master-${var.namespace}-nodeport -o jsonpath='{.spec.clusterIP}' | xargs -I {} ssh apel@{} 'sudo cat /var/lib/rancher/k3s/server/node-token'
-EOT
-}
