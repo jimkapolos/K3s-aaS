@@ -228,7 +228,7 @@ output "k3s_master_ip" {
 }
 
 output "k3s_master_token" {
-  value = data.external.k3s_master_token.result["output"]
+  value = data.external.k3s_master_token.result["token"]
 }
 
 
