@@ -203,4 +203,25 @@ resource "kubernetes_service" "github_nodeport_service" {
   }
 }
 
+data "external" "k3s_master_ip" {
+  depends_on = [kubevirt_virtual_machine.github-action-master-${var.namespace}]
+
+
+  program = ["bash", "-c", <<EOT
+while true; do
+  IP=$(kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}')
+  if [ -n "$IP" ]; then
+    echo "{ \"output\": \"$IP\" }"
+    exit 0
+  fi
+  echo "Waiting for VM to get an IP..."
+  sleep 10
+done
+EOT
+  ]
+}
+
+output "k3s_master_ip" {
+  value = data.external.k3s_master_ip.result["output"]
+}
 
