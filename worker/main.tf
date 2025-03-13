@@ -13,6 +13,11 @@ variable "namespace" {
   default     = "default"
 }
 
+variable "master_ip" {
+  description = "The IP address of the K3s master node"
+  type        = string
+  default     = "default"
+}
 
 
 provider "kubernetes" {
@@ -30,10 +35,7 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-variable "master_ip" {
-  description = "The IP address of the K3s master node"
-  type        = string
-}
+
 
 resource "kubevirt_virtual_machine" "github-action-agent" {
   metadata {
