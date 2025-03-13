@@ -224,20 +224,13 @@ output "k3s_master_ip" {
   value = data.external.k3s_master_ip.result["output"]
 }
 
-data "external" "k3s_master_token" {
-  depends_on = [kubevirt_virtual_machine.github-action-master]
+data "kubernetes_secret" "k3s_token" {
+  metadata {
+    name      = "k3s-token"
+    namespace = "kube-system"
+  }
+}
 
-  program = ["bash", "-c", <<EOT
-
-while true; do
-  TOKEN=$(ssh -p "apel1234" -o StrictHostKeyChecking=no apel@$IP "cat /var/lib/rancher/k3s/server/node-token")
-  if [ -n "$TOKEN" ]; then
-    echo "{ \"output\": \"$TOKEN\" }"
-    exit 0
-  fi
-  echo "Waiting for VM to get a token..."
-  sleep 10
-done
-EOT
-  ]
+output "k3s_token" {
+  value = try(nonsensitive(data.kubernetes_secret.k3s_token.data["node-token"]), "Secret not found")
 }
