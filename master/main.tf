@@ -24,9 +24,12 @@ resource "kubernetes_namespace" "namespace" {
 }
 
 resource "kubevirt_virtual_machine" "github-action-master" {
+  for_each = toset([var.namespace])
   metadata {
-    name      = "github-action-master-${var.namespace}"
-    namespace = var.namespace
+    name      = "github-action-master-${each.key}"
+    namespace = each.key
+  }
+
     annotations = {
       "kubevirt.io/domain" = "github-action-master-${var.namespace}"
     }
@@ -204,7 +207,8 @@ resource "kubernetes_service" "github_nodeport_service" {
 }
 
 data "external" "k3s_master_ip" {
-  depends_on = [kubevirt_virtual_machine.github-action-master-${var.namespace}]
+  depends_on = [kubevirt_virtual_machine.github-action-master[var.namespace]]
+
 
 
   program = ["bash", "-c", <<EOT
