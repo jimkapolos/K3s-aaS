@@ -68,6 +68,13 @@ jobs:
             exit 1
           fi
 
+      - name: Verify MASTER_IP
+        run: echo "Loaded MASTER_IP=${{ env.MASTER_IP }}"
+
+      - name: Debug Master Outputs
+        working-directory: ./vm-test/worker
+        run: cat master-outputs.env || echo "No master-outputs.env file found"
+
       - name: Initialize OpenTofu
         working-directory: ./vm-test/worker
         run: tofu init
@@ -82,7 +89,9 @@ jobs:
           VM_COUNT: ${{ github.event.inputs.vm_count }}
         run: |
           tofu plan 
-          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${{ env.MASTER_IP }}"
+          tofu apply -auto-approve \
+          -var="namespace=cluster-${{ github.run_number }}" \
+          -var="master_ip=${{ env.MASTER_IP }}"
           
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
