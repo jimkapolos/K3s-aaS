@@ -202,3 +202,17 @@ resource "kubernetes_service" "github_nodeport_service" {
     type = "NodePort"
   }
 }
+
+output "master_ip" {
+  value = aws_instance.master_vm.public_ip
+}
+
+output "kubeconfig" {
+  value = file("${path.module}/kubeconfig")
+  sensitive = true
+}
+
+output "join_token" {
+  value = file("${path.module}/token")
+  sensitive = true
+}
