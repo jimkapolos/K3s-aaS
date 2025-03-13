@@ -231,6 +231,7 @@ data "kubernetes_secret" "k3s_token" {
     name      = "k3s-token"
     namespace = "kube-system"
   }
+  depends_on = [kubevirt_virtual_machine.github-action-master]
 }
 
 output "k3s_token" {
