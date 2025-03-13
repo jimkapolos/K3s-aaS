@@ -33,7 +33,93 @@ resource "kubevirt_virtual_machine" "github-action-master" {
   }
 
   spec {
-    run_strategy = "Always"
+    running = true
+
+    template {
+      metadata {
+        labels = {
+          "kubevirt.io/domain" = "github-action-master-${var.namespace}"
+        }
+      }
+
+      spec {
+        domain {
+          cpu {
+            cores = 2
+          }
+          devices {
+            disk {
+              name = "rootdisk"
+              disk_device {
+                disk {
+                  bus = "virtio"
+                }
+              }
+            }
+            disk {
+              name = "cloudinitdisk"
+              disk_device {
+                disk {
+                  bus = "virtio"
+                }
+              }
+            }
+            interface {
+              name                     = "default"
+              interface_binding_method = "InterfaceMasquerade"
+            }
+          }
+          resources {
+            requests = {
+              memory = "2Gi"
+            }
+          }
+        }
+
+        volumes {
+          name = "rootdisk"
+          volume_source {
+            data_volume {
+              name = "ubuntu-disk-master-${var.namespace}"
+            }
+          }
+        }
+
+        volumes {
+          name = "cloudinitdisk"
+          volume_source {
+            cloud_init_config_drive {
+              user_data = <<EOF
+#cloud-config
+ssh_pwauth: true
+users:
+  - name: apel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    lock_passwd: false
+chpasswd:
+  list: |
+    apel:apel1234
+  expire: false
+EOF
+            }
+          }
+        }
+
+        networks {
+          name = "default"
+          network_source {
+            pod {}
+          }
+        }
+
+        interfaces {
+          name                     = "default"
+          interface_binding_method = "InterfaceMasquerade"
+        }
+      }
+    }
   }
 
   data_volume_templates {
@@ -57,6 +143,7 @@ resource "kubevirt_virtual_machine" "github-action-master" {
       }
     }
   }
+}
 
   template {
     metadata {
