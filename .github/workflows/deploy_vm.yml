@@ -61,7 +61,7 @@ jobs:
       - name: Extract Master VM Info
         working-directory: ./vm-test/master
         run: |
-          echo "MASTER_IP=$(tofu output -raw master_ip)" > master-outputs.env
+          echo "MASTER_IP=$(tofu output -raw k3s_master_ip)" > master-outputs.env
           echo "JOIN_TOKEN=$(tofu output -raw join_token)" >> master-outputs.env
           tofu output -raw kubeconfig > kubeconfig.yml
 
