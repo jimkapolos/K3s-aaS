@@ -203,16 +203,17 @@ resource "kubernetes_service" "github_nodeport_service" {
   }
 }
 
-output "master_ip_command" {
-  value = "Για να πάρεις την IP του master: kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}'"
+
+data "external" "k3s_master_ip" {
+  program = ["bash", "-c", <<EOT
+kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}' | jq -R '{ "output": . }'
+EOT
+  ]
 }
 
-#output "kubeconfig_command" {
- # value = <<EOT
-#Για να πάρεις το kubeconfig και να το αποθηκεύσεις τοπικά:
-#kubectl get secret -n kube-system k3s -o jsonpath='{.data.config}' | base64 --decode > kubeconfig
-#EOT
-#}
+output "k3s_master_ip" {
+  value = data.external.k3s_master_ip.result["output"]
+}
 
 output "join_token_command" {
   value = <<EOT
