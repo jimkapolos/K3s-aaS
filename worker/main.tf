@@ -13,15 +13,24 @@ variable "namespace" {
   default     = "default"
 }
 
-variable "master_ip" {
-  description = "IP του master VM"
-  type        = string
+data "external" "k3s_master_ip" {
+  program = ["bash", "-c", <<EOT
+kubectl get vmi -n ${var.namespace} github-action-master-${var.namespace} -o jsonpath='{.status.interfaces[0].ipAddress}' | jq -R '{ "output": . }'
+EOT
+  ]
 }
 
-variable "join_token" {
-  description = "Token για την ένταξη στο cluster"
-  type        = string
+output "k3s_master_ip" {
+  value = data.external.k3s_master_ip.result["output"]
 }
+
+output "join_token_command" {
+  value = <<EOT
+Για να πάρεις το token:
+kubectl get svc -n ${var.namespace} github-master-${var.namespace}-nodeport -o jsonpath='{.spec.clusterIP}' | xargs -I {} ssh apel@{} 'sudo cat /var/lib/rancher/k3s/server/node-token'
+EOT
+}
+
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
