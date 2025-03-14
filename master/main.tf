@@ -146,8 +146,7 @@ write_files:
       cd /usr/local/bin && containerd-rootless-setuptool.sh install
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
-      TOKEN=$(sudo cat /var/lib/rancher/k3s/server/node-token)
-      kubectl create secret generic k3s-token -n kube-system --from-literal=node-token="$TOKEN"
+      
 
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
@@ -226,14 +225,27 @@ output "k3s_master_ip" {
   value = data.external.k3s_master_ip.result["output"]
 }
 
-data "kubernetes_secret" "k3s_token" {
-  metadata {
-    name      = "k3s-token"
-    namespace = "kube-system"
-  }
-  depends_on = [kubevirt_virtual_machine.github-action-master]
+
+
+data "external" "k3s_token" {
+   depends_on = [kubevirt_virtual_machine.github-action-master]
+
+
+  program = ["bash", "-c", <<EOT
+while true; do
+  TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@$k3s_master_ip "sudo cat /var/lib/rancher/k3s/server/node-token" 2>/dev/null)
+  if [ -n "$TOKEN" ]; then
+    echo "{ \"token\": \"$TOKEN\" }"
+    exit 0
+  fi
+  echo "Waiting for K3s token..."
+  sleep 10
+done
+EOT
+  ]
 }
 
+
 output "k3s_token" {
-  value = try(nonsensitive(data.kubernetes_secret.k3s_token.data["node-token"]), "Secret not found")
+  value = data.external.k3s_token.result["token"]
 }
