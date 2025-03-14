@@ -19,6 +19,11 @@ variable "master_ip" {
   default     = "default"
 }
 
+variable "k3s_token" {
+  description = "The token of the K3s master node"
+  type        = string
+  default     = "default"
+}
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
@@ -154,7 +159,7 @@ write_files:
       sudo apt-get update
       sudo apt-get install -y sshpass
       export VM_IP=${var.master_ip}
-      export K3S_TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no  apel@$VM_IP "sudo cat /var/lib/rancher/k3s/server/node-token")
+      export K3S_TOKEN=$(var.k3s_token)
       curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
 
   - path: /etc/systemd/system/k3s-agent-setup.service
