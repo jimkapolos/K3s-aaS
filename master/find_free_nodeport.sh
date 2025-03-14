@@ -1,14 +1,17 @@
 #!/bin/bash
 
-start_port=30020
-end_port=32767
+# Εύρος θυρών NodePort (σύμφωνα με Kubernetes)
+MIN_PORT=30000
+MAX_PORT=32767
 
-for port in $(seq $start_port $end_port); do
-    if ! netstat -tuln | grep -q ":$port "; then
+# Βρες μια διαθέσιμη θύρα
+for ((port=MIN_PORT; port<=MAX_PORT; port++)); do
+    if ! ss -tuln | grep -q ":$port "; then
         echo "{\"output\": \"$port\"}"
         exit 0
     fi
 done
 
-echo "{\"error\": \"No free ports available\"}" >&2
+# Αν δεν βρεθεί διαθέσιμη θύρα
+echo "Error: No free NodePort found!" >&2
 exit 1
