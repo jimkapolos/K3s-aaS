@@ -266,7 +266,7 @@ data "external" "k3s_kubeconfig" {
   depends_on = [kubevirt_virtual_machine.github-action-master]
 
   program = ["bash", "-c", <<EOT
-file_content=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /etc/rancher/k3s/k3s.yaml")
+file_content=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /etc/rancher/k3s/k3s.yaml | base64 -w 0")
 echo "{ \"output\": \"$file_content\" }"
 EOT
   ]
@@ -275,4 +275,5 @@ EOT
 output "kubeconfig_file" {
   value = data.external.k3s_kubeconfig.result["output"]
 }
+
 
