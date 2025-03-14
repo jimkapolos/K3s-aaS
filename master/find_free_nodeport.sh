@@ -14,6 +14,6 @@ for ((port=MIN_PORT; port<=MAX_PORT; port++)); do
     fi
 done
 
-# Αν δεν βρεθεί διαθέσιμη θύρα
+# If no port is found available
 echo "Error: No free NodePort found!" >&2
 exit 1
