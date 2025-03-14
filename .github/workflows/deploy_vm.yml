@@ -23,6 +23,10 @@ jobs:
       - name: View master folder contents
         run: |
           ls -la ./vm-test/master || echo "Master folder not found in vm-test repository"
+
+      - name: Download sshpass
+        run: |
+           sudo sudo apt install sshpass
       
       - name: Install OpenTofu
         run: |
