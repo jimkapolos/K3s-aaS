@@ -262,3 +262,19 @@ output "k3s_token" {
   value = data.external.k3s_token.result["token"]
 }
 
+data "external" "k3s_kubeconfig" {
+  depends_on = [kubevirt_virtual_machine.github-action-master]
+
+  program = ["bash", "-c", <<EOT
+
+
+sshpass -p "apel1234" scp -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]}:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
+echo "{ \"output\": \"k3s.yaml\" }"
+EOT
+  ]
+}
+
+output "kubeconfig_file" {
+  value = data.external.k3s_kubeconfig.result["output"]
+}
+
