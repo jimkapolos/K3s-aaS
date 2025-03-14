@@ -67,7 +67,8 @@ jobs:
         run: |
           echo "MASTER_IP=$(tofu output -raw k3s_master_ip)" > master-outputs.env
           echo "K3S_TOKEN=$(tofu output -raw k3s_token)" >> master-outputs.env
-          
+          echo "KUBECONFIG_FILE=$(tofu output -raw kubeconfig_file)" > kubeconfig.env
+
 
       - name: Upload Master Outputs
         uses: actions/upload-artifact@v4
@@ -75,16 +76,8 @@ jobs:
           name: master-outputs
           path: |
             ./vm-test/master/master-outputs.env
+            ./vm-test/master/kubeconfig.env
 
-      - name: Fetch kubeconfig from Terraform Output
-        run: |
-           echo "KUBECONFIG_FILE=$(tofu output -raw kubeconfig_file)" > kubeconfig.env
-
-      - name: Upload kubeconfig as an artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kubeconfig
-          path: ./vm-test/master/k3s.yaml
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
         with:
