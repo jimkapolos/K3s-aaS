@@ -232,7 +232,10 @@ data "external" "k3s_token" {
   program = ["bash", "-c", <<EOT
 echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
 
-while true; do
+MAX_RETRIES=60  # 60 retries = 10 λεπτά αναμονή (60 x 10 δευτερόλεπτα)
+RETRY_COUNT=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
   TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /var/lib/rancher/k3s/server/node-token" 2>/dev/null)
 
   if [ -n "$TOKEN" ]; then
@@ -240,9 +243,13 @@ while true; do
     exit 0
   fi
 
-  echo "Waiting for K3s token..."
+  echo "Waiting for K3s token... Retry $((RETRY_COUNT+1))/$MAX_RETRIES" >&2
   sleep 10
+  RETRY_COUNT=$((RETRY_COUNT+1))
 done
+
+echo "Error: Timeout waiting for K3s token" >&2
+exit 1
 EOT
   ]
 }
