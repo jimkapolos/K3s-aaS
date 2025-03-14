@@ -3,10 +3,10 @@
 MIN_PORT=30000
 MAX_PORT=32767
 
-# Βρες όλες τις δεσμευμένες θύρες από το Kubernetes
+#  Find all reserved ports from Kubernetes
 USED_PORTS=$(kubectl get services --all-namespaces -o=jsonpath='{.items[*].spec.ports[*].nodePort}')
 
-# Βρες την πρώτη διαθέσιμη θύρα
+# Find the first available port
 for ((port=MIN_PORT; port<=MAX_PORT; port++)); do
     if [[ ! " ${USED_PORTS[@]} " =~ " $port " ]]; then
         echo "{\"output\": \"$port\"}"
