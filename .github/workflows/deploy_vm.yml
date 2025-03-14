@@ -75,7 +75,16 @@ jobs:
           name: master-outputs
           path: |
             ./vm-test/master/master-outputs.env
-      
+
+      - name: Fetch kubeconfig from Terraform Output
+        run: |
+           echo "KUBECONFIG_FILE=$(tofu output -raw kubeconfig_file)" > kubeconfig.env
+
+      - name: Upload kubeconfig as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubeconfig
+          path: ./vm-test/master/k3s.yaml
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
         with:
