@@ -267,7 +267,7 @@ data "external" "k3s_kubeconfig" {
 
   program = ["bash", "-c", <<EOT
 file_content=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /etc/rancher/k3s/k3s.yaml | base64 -w 0")
-echo "{ \"output\": \"$file_content\" }"
+echo "{ \"output\": \"$(echo $file_content | tr -d '\n')\" }"
 EOT
   ]
 }
