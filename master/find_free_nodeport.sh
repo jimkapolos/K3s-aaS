@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# Εύρος θυρών NodePort (σύμφωνα με Kubernetes)
 MIN_PORT=30000
 MAX_PORT=32767
 
-# Βρες μια διαθέσιμη θύρα
+# Βρες όλες τις δεσμευμένες θύρες από το Kubernetes
+USED_PORTS=$(kubectl get services --all-namespaces -o=jsonpath='{.items[*].spec.ports[*].nodePort}')
+
+# Βρες την πρώτη διαθέσιμη θύρα
 for ((port=MIN_PORT; port<=MAX_PORT; port++)); do
-    if ! ss -tuln | grep -q ":$port "; then
+    if [[ ! " ${USED_PORTS[@]} " =~ " $port " ]]; then
         echo "{\"output\": \"$port\"}"
         exit 0
     fi
