@@ -159,7 +159,7 @@ write_files:
       sudo apt-get update
       sudo apt-get install -y sshpass
       export VM_IP=${var.master_ip}
-      export K3S_TOKEN=$(var.k3s_token)
+      export K3S_TOKEN=${var.k3s_token}
       curl -sfL https://get.k3s.io | K3S_URL=https://$VM_IP:6443 K3S_TOKEN=$K3S_TOKEN sh -
 
   - path: /etc/systemd/system/k3s-agent-setup.service
