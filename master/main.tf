@@ -146,7 +146,6 @@ write_files:
       cd /usr/local/bin && containerd-rootless-setuptool.sh install
       sudo ufw disable
       curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
-      
 
   - path: /etc/systemd/system/k3s-setup.service
     permissions: "0644"
