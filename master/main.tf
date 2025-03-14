@@ -227,21 +227,26 @@ output "k3s_master_ip" {
 
 
 data "external" "k3s_token" {
-  depends_on = [kubevirt_virtual_machine.github-action-master]
+  depends_on = [data.external.k3s_master_ip]
 
   program = ["bash", "-c", <<EOT
+echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
+
 while true; do
   TOKEN=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /var/lib/rancher/k3s/server/node-token" 2>/dev/null)
+
   if [ -n "$TOKEN" ]; then
     echo "{ \"token\": \"$TOKEN\" }"
     exit 0
   fi
+
   echo "Waiting for K3s token..."
   sleep 10
 done
 EOT
   ]
 }
+
 
 
 output "k3s_token" {
