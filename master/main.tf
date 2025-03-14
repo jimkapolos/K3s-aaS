@@ -181,6 +181,10 @@ provider "kubernetes" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
+data "external" "free_node_port" {
+  program = ["bash", "${path.module}/find_free_nodeport.sh"]
+}
+
 resource "kubernetes_service" "github_nodeport_service" {
   metadata {
     name      = "github-master-${var.namespace}-nodeport"
@@ -196,7 +200,7 @@ resource "kubernetes_service" "github_nodeport_service" {
       protocol    = "TCP"
       port        = 22
       target_port = 22
-      node_port   = 30021
+      node_port   = data.external.free_node_port.result["output"]
     }
 
     type = "NodePort"
@@ -254,8 +258,7 @@ EOT
   ]
 }
 
-
-
 output "k3s_token" {
   value = data.external.k3s_token.result["token"]
 }
+
