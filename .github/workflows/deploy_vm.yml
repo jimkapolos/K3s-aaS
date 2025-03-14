@@ -26,7 +26,7 @@ jobs:
 
       - name: Download sshpass
         run: |
-           sudo sudo apt install sshpass
+           sudo apt install sshpass
       
       - name: Install OpenTofu
         run: |
