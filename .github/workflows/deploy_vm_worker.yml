@@ -24,11 +24,6 @@ jobs:
       - name: View worker folder contents
         run: ls -la ./vm-test/worker || echo "Worker folder not found in vm-test repository"
       
-      - name: Install OpenTofu
-        run: |
-          sudo snap install --classic opentofu
-          tofu --version
-      
       - name: Set up Kubernetes credentials
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
