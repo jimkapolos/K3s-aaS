@@ -266,7 +266,8 @@ data "external" "k3s_kubeconfig" {
   depends_on = [kubevirt_virtual_machine.github-action-master]
 
   program = ["bash", "-c", <<EOT
-file_content=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@10.20.126.20  "echo apel1234 | sudo -S cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'")
+echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
+file_content=$(sshpass -p "apel1234" ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]}  "echo apel1234 | sudo -S cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'")
 echo "{ \"output\": \"$file_content\" }"
 EOT
   ]
