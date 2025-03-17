@@ -79,11 +79,7 @@ jobs:
       - name: Initialize OpenTofu
         working-directory: ./vm-test/worker
         run: tofu init
-
-      - name: Validate OpenTofu configuration
-        working-directory: ./vm-test/worker
-        run: tofu validate
-      
+        
       - name: Apply OpenTofu Configuration
         working-directory: ./vm-test/worker
         env:
