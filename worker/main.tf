@@ -52,7 +52,7 @@ resource "kubernetes_namespace" "namespace" {
 resource "kubevirt_virtual_machine" "github-action-agent" {
   metadata {
     name      = "github-action-agent-${var.namespace}"
-    namespace = var.namespace
+    namespace = var.namespace_master
     annotations = {
       "kubevirt.io/domain" = "github-action-agent-${var.namespace}"
     }
