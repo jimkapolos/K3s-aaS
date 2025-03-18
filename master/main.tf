@@ -32,21 +32,18 @@ data "kubernetes_secret" "existing_secret" {
   }
 }
 
-resource "kubernetes_manifest" "cloned_secret" {
+# Αυτή είναι μια εναλλακτική προσέγγιση χρησιμοποιώντας το kubernetes_secret resource
+resource "kubernetes_secret" "cloned_secret" {
   depends_on = [kubernetes_namespace.namespace]
   
-  manifest = {
-    apiVersion = "v1"
-    kind       = "Secret"
-    metadata = {
-      name      = "vm-master-key"
-      namespace = var.namespace
-    }
-    data = data.kubernetes_secret.existing_secret.data
-    type = "Opaque"
+  metadata {
+    name      = "vm-master-key"
+    namespace = var.namespace
   }
-}
 
+  data = data.kubernetes_secret.existing_secret.data
+  type = "Opaque"
+}
 
 
 
