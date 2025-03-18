@@ -135,7 +135,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh-authorized-keys:
-      - "${chomp(file("vm-master-key.pub"))}"
+      - "${base64decode(data.kubectl_secret.vm_master_key.data["key1"])}"
 chpasswd:
   list: |
     apel:apel1234
@@ -177,8 +177,7 @@ write_files:
     permissions: "0600"
     owner: apel:apel
     content: |
-      ${chomp(file("vm-master-key.pub"))}
-
+      ${base64decode(data.kubectl_secret.vm_master_key.data["key1"])}
   
 runcmd:
   - systemctl daemon-reload
