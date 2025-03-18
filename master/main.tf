@@ -135,7 +135,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh-authorized-keys:
-      - "${chomp(file("~/.ssh/id_rsa.pub"))}"
+      - chomp(file("~/.ssh/id_rsa.pub"))
 chpasswd:
   list: |
     apel:apel1234
