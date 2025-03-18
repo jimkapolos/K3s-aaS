@@ -277,4 +277,8 @@ output "kubeconfig_file" {
   value = data.external.k3s_kubeconfig.result["output"]
 }
 
+output "namespace" {
+  value = var.namespace
+}
+
 
