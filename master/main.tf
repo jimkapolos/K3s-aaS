@@ -138,12 +138,17 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
-    ssh-authorized-keys:
-      - ${var.ssh_key}
 chpasswd:
   list: |
     apel:apel1234
   expire: false
+
+sshPublicKey:
+  source:
+    secret:
+      secretName: vm-master-key
+  propagationMethod:
+    noCloud: {}
 
 write_files:
   - path: /usr/local/bin/k3s-setup.sh
@@ -177,11 +182,6 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /home/apel/.ssh/authorized_keys
-    permissions: "0600"
-    owner: apel:apel
-    content: |
-      - ${var.ssh_key}  
 runcmd:
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
