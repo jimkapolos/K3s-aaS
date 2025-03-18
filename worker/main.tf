@@ -64,7 +64,7 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
     data_volume_templates {
       metadata {
         name      = "ubuntu-disk-worker-${var.namespace}"
-        namespace = var.namespace
+        namespace = var.namespace_master
       }
       spec {
         pvc {
