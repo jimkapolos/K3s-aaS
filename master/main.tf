@@ -173,7 +173,8 @@ write_files:
     permissions: "0600"
     owner: "apel"
     content: |
-      ${base64decode(kubernetes_secret.vm-master-key.data.key1)}
+     ${base64decode(data.kubernetes_secret.vm-master-key.data.key1)}
+
 
 runcmd:
   - systemctl daemon-reload
