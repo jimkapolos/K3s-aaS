@@ -142,12 +142,6 @@ chpasswd:
   expire: false
 
 write_files:
-  - path: /home/apel/.ssh/authorized_keys
-    permissions: "0600"
-    owner: "apel"
-    content: |
-     data.kubernetes_secret.vm-master-key.data.key1
-
   - path: /usr/local/bin/k3s-setup.sh
     permissions: "0755"
     content: |
