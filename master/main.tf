@@ -121,6 +121,7 @@ resource "kubevirt_virtual_machine" "github-action-master" {
           }
         }
 
+
         
         network {
           name = "default"
@@ -151,17 +152,12 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
+    ssh_authorized_keys:
+      - ${data.kubernetes_secret.cloned_secret.data["key1"]}
 chpasswd:
   list: |
     apel:apel1234
   expire: false
-
-sshPublicKey:
-  source:
-    secret:
-      secretName: vm-master-key
-  propagationMethod:
-    noCloud: {}
 
 write_files:
   - path: /usr/local/bin/k3s-setup.sh
