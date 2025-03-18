@@ -135,7 +135,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh-authorized-keys:
-      - "${data.kubernetes_secret.vm_master_key.data["key1"]}"
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDMG4kDIgKdkbYndpZeeqTUaSiuEhEDS/kjOMsf/Qa4RZeZjSt5W6pLU5r5QAYLNR824s7TET115nUe+lsQ2qXcUKtHXI7vAKA6V6otSBNq1pSvNc7aaypdVUY++3qsZiQFdn/2D+a0iFb+OoqJ3ezpRtsnES4Xbx3P9D4wzgzVk8rVxMtih/HPWdhZOSnTuzWTUbsEjzvX+CW8yc7JmTDkMvpfBgdoTiCnGy5QgIof+/r58hWc8ikk+HuX5ywZ/KirzCEsG4Sv+eX553fQ2Gc6Wy79o01KV2ixHnAQlQmOJGkuC4/I+QdCSfReJ2ES7yTZ33uyfM+ljXhNqr2qS7Zmc3PO4Da2bF4rwseDT+JuB/4tav7W7QXg3zGI0AFsTlhyTK1kux1ZwgJN5MsKhmatE0qCNgeT0jIRKrwaAqdYsM7V6jaEIEIoztqYpFaS69VLeI15TTL+LS/Tmpg/QM7+RpYTpGQKJ3hE17QbQw+gvdHZPxLkxc09i0yTWwN1Ym2Gk2I5sIzLTlDn3yy0p6tLjFBVXwmmURYnXd4j5V1eFAOv1Dm/SCmqf7t+UXazCpvHMmq6eVFl/avnxmdYupg4xo+6BXX1WnnZYej21c+xabdvgCSX6TwCrs9xtqhLtQf0WLwMN2giOZFEQMi84Ep5hWcOBU7RUns2DIYbUtnbwQ== dkap@apel-server1
 chpasswd:
   list: |
     apel:apel1234
@@ -177,7 +177,7 @@ write_files:
     permissions: "0600"
     owner: apel:apel
     content: |
-      "${data.kubernetes_secret.vm_master_key.data["key1"]}"
+      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDMG4kDIgKdkbYndpZeeqTUaSiuEhEDS/kjOMsf/Qa4RZeZjSt5W6pLU5r5QAYLNR824s7TET115nUe+lsQ2qXcUKtHXI7vAKA6V6otSBNq1pSvNc7aaypdVUY++3qsZiQFdn/2D+a0iFb+OoqJ3ezpRtsnES4Xbx3P9D4wzgzVk8rVxMtih/HPWdhZOSnTuzWTUbsEjzvX+CW8yc7JmTDkMvpfBgdoTiCnGy5QgIof+/r58hWc8ikk+HuX5ywZ/KirzCEsG4Sv+eX553fQ2Gc6Wy79o01KV2ixHnAQlQmOJGkuC4/I+QdCSfReJ2ES7yTZ33uyfM+ljXhNqr2qS7Zmc3PO4Da2bF4rwseDT+JuB/4tav7W7QXg3zGI0AFsTlhyTK1kux1ZwgJN5MsKhmatE0qCNgeT0jIRKrwaAqdYsM7V6jaEIEIoztqYpFaS69VLeI15TTL+LS/Tmpg/QM7+RpYTpGQKJ3hE17QbQw+gvdHZPxLkxc09i0yTWwN1Ym2Gk2I5sIzLTlDn3yy0p6tLjFBVXwmmURYnXd4j5V1eFAOv1Dm/SCmqf7t+UXazCpvHMmq6eVFl/avnxmdYupg4xo+6BXX1WnnZYej21c+xabdvgCSX6TwCrs9xtqhLtQf0WLwMN2giOZFEQMi84Ep5hWcOBU7RUns2DIYbUtnbwQ== dkap@apel-server1
   
 runcmd:
   - systemctl daemon-reload
