@@ -61,6 +61,7 @@ jobs:
             export $(grep -v '^#' master-outputs.env | xargs)
             echo "MASTER_IP=$MASTER_IP" >> $GITHUB_ENV
             echo "K3S_TOKEN=$K3S_TOKEN" >> $GITHUB_ENV
+            echo "NAMESPACE"            >> $GITHUB_ENV
           else
             echo "Error: master-outputs.env file not found!"
             exit 1
@@ -71,6 +72,9 @@ jobs:
 
       - name: Verify K3S_TOKEN
         run: echo "Loaded K3S_TOKEN=${{ env.K3S_TOKEN}}"
+
+      - name: Verify NAMESPACE
+        run: echo "Loaded NAMESPACE=${{ env.NAMESPACE }}"
 
       - name: Debug Master Outputs
         working-directory: ./vm-test/worker
@@ -83,12 +87,13 @@ jobs:
       - name: Apply OpenTofu Configuration
         working-directory: ./vm-test/worker
         env:
-          VM_COUNT: ${{ github.event.inputs.vm_count }}
           MASTER_IP: ${{ env.MASTER_IP }}
           K3S_TOKEN: ${{ env.K3S_TOKEN }}
+          NAMESPACE: ${{ env.NAMESPACE}}
+          
         run: |
-          tofu plan -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${MASTER_IP}" -var="k3s_token=${K3S_TOKEN}"
-          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${MASTER_IP}" -var="k3s_token=${K3S_TOKEN}"
+          tofu plan -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${MASTER_IP}" -var="k3s_token=${K3S_TOKEN}" -var="namespace-master=${NAMESPACE}
+          tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${MASTER_IP}" -var="k3s_token=${K3S_TOKEN}" -var="namespace-master=${NAMESPACE}
           
       - name: Upload tfstate as an artifact
         uses: actions/upload-artifact@v4
