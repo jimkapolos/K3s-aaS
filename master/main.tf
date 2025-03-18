@@ -169,11 +169,13 @@ write_files:
 
       [Install]
       WantedBy=multi-user.target
+
   - path: /home/apel/.ssh/authorized_keys
     permissions: "0600"
     owner: "apel"
     content: |
-          data.kubernetes_secret.vm-master-key.data["key1"]
+        ${data.kubernetes_secret.vm-master-key.data["key1"]}
+
 
 
 runcmd:
