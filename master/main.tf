@@ -17,11 +17,6 @@ provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "kubernetes-admin@kubernetes"
-}
-
 resource "kubernetes_namespace" "namespace" {
   metadata {
     name = var.namespace
@@ -32,77 +27,6 @@ data "kubernetes_secret" "vm-master-key" {
   metadata {
     name      = "vm-master-key"
     namespace = "default"
-  }
-}
-
-# Δημιουργία του cloud-init config ως secret
-resource "kubernetes_secret" "cloud_init_config" {
-  metadata {
-    name      = "cloud-init-config-${var.namespace}"
-    namespace = var.namespace
-  }
-
-  data = {
-    "userdata" = <<EOF
-#cloud-config
-ssh_pwauth: true
-users:
-  - name: apel
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users, admin
-    shell: /bin/bash
-    lock_passwd: false
-chpasswd:
-  list: |
-    apel:apel1234
-  expire: false
-
-write_files:
-  - path: /usr/local/bin/k3s-setup.sh
-    permissions: "0755"
-    content: |
-      #!/bin/bash
-      echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-      sudo apt-get update
-      sudo apt-get install -y bash-completion sshpass uidmap ufw
-      echo "source <(kubectl completion bash)" >> ~/.bashrc
-      echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
-      wget https://github.com/containerd/nerdctl/releases/download/v1.7.6/nerdctl-full-1.7.6-linux-amd64.tar.gz
-      sudo tar Cxzvvf /usr/local nerdctl-full-1.7.6-linux-amd64.tar.gz
-      cd /usr/local/bin && containerd-rootless-setuptool.sh install
-      sudo ufw disable
-      curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
-
-  - path: /etc/systemd/system/k3s-setup.service
-    permissions: "0644"
-    content: |
-      [Unit]
-      Description=Setup K3s Master Node
-      After=network.target
-      Wants=network-online.target
-
-      [Service]
-      Type=oneshot
-      ExecStart=/usr/local/bin/k3s-setup.sh
-      RemainAfterExit=true
-
-      [Install]
-      WantedBy=multi-user.target
-
-  - path: /home/apel/.ssh/authorized_keys
-    permissions: "0600"
-    owner: "apel"
-    content: |
-      ${data.kubernetes_secret.vm-master-key.data["key1"]}
-
-runcmd:
-  - mkdir -p /home/apel/.ssh
-  - chown -R apel:apel /home/apel/.ssh
-  - chmod 700 /home/apel/.ssh
-  - systemctl daemon-reload
-  - systemctl enable k3s-setup.service
-  - systemctl start k3s-setup.service
-EOF
   }
 }
 
@@ -199,16 +123,80 @@ resource "kubevirt_virtual_machine" "github-action-master" {
         volume {
           name = "cloudinitdisk"
           volume_source {
-            cloud_init_no_cloud {
-              user_data_secret_ref {
-                name = kubernetes_secret.cloud_init_config.metadata[0].name
-              }
+            cloud_init_config_drive {
+              user_data = <<EOF
+#cloud-config
+ssh_pwauth: true
+users:
+  - name: apel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    lock_passwd: false
+chpasswd:
+  list: |
+    apel:apel1234
+  expire: false
+
+write_files:
+  - path: /usr/local/bin/k3s-setup.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+      sudo apt-get update
+      sudo apt-get install -y bash-completion sshpass uidmap ufw
+      echo "source <(kubectl completion bash)" >> ~/.bashrc
+      echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
+      wget https://github.com/containerd/nerdctl/releases/download/v1.7.6/nerdctl-full-1.7.6-linux-amd64.tar.gz
+      sudo tar Cxzvvf /usr/local nerdctl-full-1.7.6-linux-amd64.tar.gz
+      cd /usr/local/bin && containerd-rootless-setuptool.sh install
+      sudo ufw disable
+      curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
+
+  - path: /etc/systemd/system/k3s-setup.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Setup K3s Master Node
+      After=network.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/k3s-setup.sh
+      RemainAfterExit=true
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /home/apel/.ssh/authorized_keys
+  permissions: "0600"
+  owner: "apel"
+  content: |
+    "${base64decode(data.kubernetes_secret.vm-master-key.data["key1"])}"
+
+
+
+runcmd:
+  - mkdir -p /home/apel/.ssh
+  - chown -R apel:apel /home/apel/.ssh
+  - chmod 700 /home/apel/.ssh
+  - systemctl daemon-reload
+  - systemctl enable k3s-setup.service
+  - systemctl start k3s-setup.service
+EOF
             }
           }
         }
       }
     }
   }
+}
+
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+  config_context = "kubernetes-admin@kubernetes"
 }
 
 data "external" "free_node_port" {
@@ -258,13 +246,15 @@ output "k3s_master_ip" {
   value = data.external.k3s_master_ip.result["output"]
 }
 
+
+
 data "external" "k3s_token" {
   depends_on = [data.external.k3s_master_ip]
 
   program = ["bash", "-c", <<EOT
 echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
 
-MAX_RETRIES=60
+MAX_RETRIES=60  # 60 retries = 10 λεπτά αναμονή (60 x 10 δευτερόλεπτα)
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
@@ -300,6 +290,7 @@ EOT
   ]
 }
 
+
 output "kubeconfig_file" {
   value = data.external.k3s_kubeconfig.result["output"]
 }
@@ -307,3 +298,5 @@ output "kubeconfig_file" {
 output "namespace" {
   value = var.namespace
 }
+
+
