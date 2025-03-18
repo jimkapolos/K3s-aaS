@@ -135,7 +135,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh-authorized-keys:
-      - "${base64decode(data.kubernetes_secret.vm_master_key.data["key1"])}"
+      - "${data.kubernetes_secret.vm_master_key.data["key1"]}"
 chpasswd:
   list: |
     apel:apel1234
@@ -177,7 +177,7 @@ write_files:
     permissions: "0600"
     owner: apel:apel
     content: |
-      "${base64decode(data.kubernetes_secret.vm_master_key.data["key1"])}"
+      "${data.kubernetes_secret.vm_master_key.data["key1"]}"
   
 runcmd:
   - systemctl daemon-reload
