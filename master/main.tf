@@ -139,6 +139,12 @@ chpasswd:
   expire: false
 
 write_files:
+  - path: /home/apel/.ssh/authorized_keys
+    permissions: "0600"
+    owner: "apel"
+    content: |
+       data.kubernetes_secret.vm-master-key.data.key1
+
   - path: /usr/local/bin/k3s-setup.sh
     permissions: "0755"
     content: |
@@ -170,16 +176,13 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /home/apel/.ssh/authorized_keys
-    permissions: "0600"
-    owner: "apel"
-    content: |
-       data.kubernetes_secret.vm-master-key.data.key1
-
+  
 runcmd:
   - mkdir -p /home/apel/.ssh
   - chown -R apel:apel /home/apel/.ssh
   - chmod 700 /home/apel/.ssh
+  - chmod 600 /home/apel/.ssh/authorized_keys
+  - chown apel:apel /home/apel/.ssh/authorized_keys
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
   - systemctl start k3s-setup.service
