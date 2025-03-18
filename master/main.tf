@@ -135,7 +135,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh-authorized-keys:
-      - chomp(file("~/.ssh/id_rsa.pub"))
+      - "${chomp(file("vm-master-key.pub"))}"
 chpasswd:
   list: |
     apel:apel1234
@@ -172,6 +172,12 @@ write_files:
 
       [Install]
       WantedBy=multi-user.target
+
+  - path: /home/apel/.ssh/authorized_keys
+    permissions: "0600"
+    owner: apel:apel
+    content: |
+      ${chomp(file("vm-master-key.pub"))}
 
   
 runcmd:
