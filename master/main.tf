@@ -178,11 +178,6 @@ write_files:
 
   
 runcmd:
-  - mkdir -p /home/apel/.ssh
-  - chown -R apel:apel /home/apel/.ssh
-  - chmod 700 /home/apel/.ssh
-  - chmod 600 /home/apel/.ssh/authorized_keys
-  - chown apel:apel /home/apel/.ssh/authorized_keys
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
   - systemctl start k3s-setup.service
