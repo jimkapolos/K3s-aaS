@@ -254,7 +254,7 @@ MAX_RETRIES=60  # 60 retries = 10 λεπτά αναμονή (60 x 10 δευτε�
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-  TOKEN=$(ssh -i /home/apel/.ssh/id_rsa -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /var/lib/rancher/k3s/server/node-token" 2>/dev/null)
+  TOKEN=$(ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "sudo cat /var/lib/rancher/k3s/server/node-token" 2>/dev/null)
 
   if [ -n "$TOKEN" ]; then
     echo "{ \"token\": \"$TOKEN\" }"
@@ -280,7 +280,7 @@ data "external" "k3s_kubeconfig" {
   depends_on = [data.external.k3s_token]
   program = ["bash", "-c", <<EOT
 echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
-file_content=$(ssh -i /home/apel/.ssh/id_rsa -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "echo apel1234 | sudo -S cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'")
+file_content=$(ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "echo apel1234 | sudo -S cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'")
 echo "{ \"output\": \"$file_content\" }"
 EOT
   ]
