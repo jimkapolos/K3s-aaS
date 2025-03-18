@@ -134,7 +134,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-      - ${kubernetes_secret.ssh_key_secret.data["ssh_key"]}
+      - ${data.kubernetes_secret.vm-master-key.data["key1"]}
 chpasswd:
   list: |
     apel:apel1234
