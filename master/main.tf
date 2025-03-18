@@ -171,14 +171,17 @@ write_files:
       WantedBy=multi-user.target
 
   - path: /home/apel/.ssh/authorized_keys
-    permissions: "0600"
-    owner: "apel"
-    content: |
-        ${data.kubernetes_secret.vm-master-key.data["key1"]}"
+  permissions: "0600"
+  owner: "apel"
+  content: |
+    ${data.kubernetes_secret.vm-master-key.data["key1"]}
 
 
 
 runcmd:
+  - mkdir -p /home/apel/.ssh
+  - chown -R apel:apel /home/apel/.ssh
+  - chmod 700 /home/apel/.ssh
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
   - systemctl start k3s-setup.service
