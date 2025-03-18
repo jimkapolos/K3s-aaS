@@ -143,7 +143,7 @@ write_files:
     permissions: "0600"
     owner: "apel"
     content: |
-     ${data.kubernetes_secret.vm_master_key.data["key1"]}
+     data.kubernetes_secret.vm-master-key.data.key1
 
   - path: /usr/local/bin/k3s-setup.sh
     permissions: "0755"
