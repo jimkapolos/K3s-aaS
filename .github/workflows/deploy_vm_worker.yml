@@ -61,7 +61,7 @@ jobs:
             export $(grep -v '^#' master-outputs.env | xargs)
             echo "MASTER_IP=$MASTER_IP" >> $GITHUB_ENV
             echo "K3S_TOKEN=$K3S_TOKEN" >> $GITHUB_ENV
-            echo "NAMESPACE"            >> $GITHUB_ENV
+            echo "NAMESPACE=$NAMESPACE" >> $GITHUB_ENV
           else
             echo "Error: master-outputs.env file not found!"
             exit 1
