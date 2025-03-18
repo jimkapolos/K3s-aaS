@@ -25,7 +25,7 @@ resource "kubernetes_namespace" "namespace" {
 
 data "kubernetes_secret" "vm_master_key" {
   metadata {
-    name      = "vm_master_key"
+    name      = "vm-master-key"
     namespace = "default"
   }
 }
