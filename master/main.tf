@@ -190,17 +190,6 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /home/apel/.ssh/id_rsa
-    permissions: "0600"
-    content: |
-      ${data.kubernetes_secret.existing_secret.data["key1"]}
-- path: /home/apel/.ssh/config
-  permissions: "0644"
-  content: |
-    Host *
-      StrictHostKeyChecking no
-      UserKnownHostsFile=/dev/null
-
 runcmd:
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
