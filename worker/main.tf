@@ -25,7 +25,7 @@ variable "k3s_token" {
   default     = "default"
 }
 
-variable "namespace-master" {
+variable "namespace_master" {
   description = "The namespace from master"
   type        = string
   default     = "default"
@@ -43,7 +43,7 @@ provider "kubevirt" {
 
 resource "kubernetes_namespace" "namespace" {
   metadata {
-    name = var.namespace-master
+    name = var.namespace_master
   }
 }
 
