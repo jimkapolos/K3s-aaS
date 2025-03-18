@@ -23,6 +23,13 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
+data "kubernetes_secret" "vm-master-key" {
+  metadata {
+    name      = "vm-master-key"
+    namespace = "default"
+  }
+}
+
 resource "kubevirt_virtual_machine" "github-action-master" {
   metadata {
     name      = "github-action-master-${var.namespace}"
