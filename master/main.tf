@@ -133,6 +133,8 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
+    ssh_authorized_keys:
+      - ${kubernetes_secret.ssh_key_secret.data["ssh_key"]}
 chpasswd:
   list: |
     apel:apel1234
@@ -169,13 +171,6 @@ write_files:
 
       [Install]
       WantedBy=multi-user.target
-
-  - path: /home/apel/.ssh/authorized_keys
-  permissions: "0600"
-  owner: "apel"
-  content: |
-    "${base64decode(data.kubernetes_secret.vm-master-key.encoded_data["key1"])}"
-
 
 
 runcmd:
