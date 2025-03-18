@@ -104,6 +104,7 @@ resource "kubevirt_virtual_machine" "github-action-master" {
           }
         }
 
+        
         network {
           name = "default"
           network_source {
@@ -133,6 +134,8 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
+    ssh-authorized-keys:
+      - ${file("~/.ssh/id_rsa.pub")}
 chpasswd:
   list: |
     apel:apel1234
