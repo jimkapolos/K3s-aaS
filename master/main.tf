@@ -121,6 +121,8 @@ resource "kubevirt_virtual_machine" "github-action-master" {
           }
         }
 
+        
+
 
         
         network {
@@ -139,20 +141,83 @@ resource "kubevirt_virtual_machine" "github-action-master" {
           }
         }
 
-   volume {
+        volume {
           name = "cloudinitdisk"
           volume_source {
             cloud_init_config_drive {
-              user_data_secret_ref {
-                name = "cloud-init-master"
-              }
+              user_data = <<EOF
+#cloud-config
+ssh_pwauth: true
+users:
+  - name: apel
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+          - $data.kubernetes_secret.existing_secret.data["key1"]}
+chpasswd:
+  list: |
+    apel:apel1234
+  expire: false
+
+write_files:
+  - path: /usr/local/bin/k3s-setup.sh
+    permissions: "0755"
+    content: |
+      #!/bin/bash
+      echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+      sudo apt-get update
+      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > /root/.ssh/id_rsa
+      chmod 600 /root/.ssh/id_rsa
+      sudo apt-get install -y bash-completion sshpass uidmap ufw
+      echo "source <(kubectl completion bash)" >> ~/.bashrc
+      echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
+      wget https://github.com/containerd/nerdctl/releases/download/v1.7.6/nerdctl-full-1.7.6-linux-amd64.tar.gz
+      sudo tar Cxzvvf /usr/local nerdctl-full-1.7.6-linux-amd64.tar.gz
+      cd /usr/local/bin && containerd-rootless-setuptool.sh install
+      sudo ufw disable
+      curl -sfL https://get.k3s.io | K3S_KUBECONFIG_MODE="644" INSTALL_K3S_EXEC="--cluster-cidr=20.10.0.0/16" sh
+
+  - path: /etc/systemd/system/k3s-setup.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Setup K3s Master Node
+      After=network.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/local/bin/k3s-setup.sh
+      RemainAfterExit=true
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /home/apel/.ssh/id_rsa
+    permissions: "0600"
+    content: |
+      ${data.kubernetes_secret.existing_secret.data["key1"]}
+- path: /home/apel/.ssh/config
+  permissions: "0644"
+  content: |
+    Host *
+      StrictHostKeyChecking no
+      UserKnownHostsFile=/dev/null
+
+runcmd:
+  - systemctl daemon-reload
+  - systemctl enable k3s-setup.service
+  - systemctl start k3s-setup.service
+EOF
             }
           }
         }
-      } 
-    }   
-  }     
-}       
+      }
+    }
+  }
+}
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
