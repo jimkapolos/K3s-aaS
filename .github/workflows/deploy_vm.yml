@@ -67,7 +67,7 @@ jobs:
         run: |
           echo "MASTER_IP=$(tofu output -raw k3s_master_ip)" > master-outputs.env
           echo "K3S_TOKEN=$(tofu output -raw k3s_token)" >> master-outputs.env
-          echo "K3S_TOKEN=$(tofu output -raw namespace)" >> master-outputs.env
+          echo "NAMESPACE=$(tofu output -raw namespace)" >> master-outputs.env
           echo "KUBECONFIG_FILE=$(tofu output -raw kubeconfig_file)" > kubeconfig.env
 
 
