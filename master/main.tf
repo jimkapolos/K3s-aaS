@@ -13,10 +13,27 @@ variable "namespace" {
   default     = "default"
 }
 
-variable "ssh_key" {
-  description = "SSH public key"
-  type        = string
+data "kubernetes_secret" "existing_secret" {
+  metadata {
+    name      = "vm-master-key"
+    namespace = "default"
+  }
 }
+
+# Δημιουργεί νέο secret στο namespace του VM
+resource "kubernetes_manifest" "cloned_secret" {
+  manifest = {
+    apiVersion = "v1"
+    kind       = "Secret"
+    metadata = {
+      name      = "vm-master-key"
+      namespace = var.namespace
+    }
+    data = data.kubernetes_secret.existing_secret.data
+    type = "Opaque"
+  }
+}
+
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
@@ -27,12 +44,7 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-data "kubernetes_secret" "vm_master_key" {
-  metadata {
-    name      = "vm-master-key"
-    namespace = "default"
-  }
-}
+
 
 resource "kubevirt_virtual_machine" "github-action-master" {
   metadata {
