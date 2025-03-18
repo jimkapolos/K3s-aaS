@@ -13,6 +13,18 @@ variable "namespace" {
   default     = "default"
 }
 
+
+
+provider "kubevirt" {
+  config_context = "kubernetes-admin@kubernetes"
+}
+
+resource "kubernetes_namespace" "namespace" {
+  metadata {
+    name = var.namespace
+  }
+}
+
 data "kubernetes_secret" "existing_secret" {
   metadata {
     name      = "vm-master-key"
@@ -20,8 +32,9 @@ data "kubernetes_secret" "existing_secret" {
   }
 }
 
-# Δημιουργεί νέο secret στο namespace του VM
 resource "kubernetes_manifest" "cloned_secret" {
+  depends_on = [kubernetes_namespace.namespace]
+  
   manifest = {
     apiVersion = "v1"
     kind       = "Secret"
@@ -34,15 +47,6 @@ resource "kubernetes_manifest" "cloned_secret" {
   }
 }
 
-provider "kubevirt" {
-  config_context = "kubernetes-admin@kubernetes"
-}
-
-resource "kubernetes_namespace" "namespace" {
-  metadata {
-    name = var.namespace
-  }
-}
 
 
 
