@@ -152,9 +152,6 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
-    ssh_authorized_keys:
-          - ${base64decode(data.kubernetes_secret.existing_secret.data["key1"])}
-chpasswd:
   list: |
     apel:apel1234
   expire: false
@@ -166,6 +163,8 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
+      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > /root/.ssh/id_rsa
+      chmod 600 /root/.ssh/id_rsa
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
@@ -190,6 +189,17 @@ write_files:
 
       [Install]
       WantedBy=multi-user.target
+
+  - path: /home/apel/.ssh/id_rsa
+    permissions: "0600"
+    content: |
+      ${data.kubernetes_secret.existing_secret.data["key1"]}
+- path: /home/apel/.ssh/config
+  permissions: "0644"
+  content: |
+    Host *
+      StrictHostKeyChecking no
+      UserKnownHostsFile=/dev/null
 
 runcmd:
   - systemctl daemon-reload
