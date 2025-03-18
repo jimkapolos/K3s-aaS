@@ -25,6 +25,13 @@ variable "k3s_token" {
   default     = "default"
 }
 
+variable "namespace-master" {
+  description = "The namespace from master"
+  type        = string
+  default     = "default"
+}
+
+
 provider "kubernetes" {
   config_path    = "~/.kube/config"
   config_context = "kubernetes-admin@kubernetes"
@@ -36,7 +43,7 @@ provider "kubevirt" {
 
 resource "kubernetes_namespace" "namespace" {
   metadata {
-    name = var.namespace
+    name = var.namespace-master
   }
 }
 
