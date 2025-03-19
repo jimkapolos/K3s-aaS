@@ -157,11 +157,13 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > /apel/.ssh/id_rsa
-      mkdir -p ~/.ssh
-      chmod 700 ~/.ssh
-      echo "$(cat ~/.ssh/id_ed25519.pub)" >> ~/.ssh/authorized_keys
-      chmod 600 ~/.ssh/authorized_keys
+      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > /home/apel/.ssh/id_ed25519
+      chmod 600 /home/apel/.ssh/id_ed25519
+      mkdir -p /home/apel/.ssh
+      chmod 700 /home/apel/.ssh
+      cat /home/apel/.ssh/id_ed25519.pub >> /home/apel/.ssh/authorized_keys
+      chmod 600 /home/apel/.ssh/authorized_keys
+      chown -R apel:apel /home/apel/.ssh
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
