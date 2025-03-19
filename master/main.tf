@@ -164,6 +164,7 @@ write_files:
       cat /home/apel/.ssh/id_ed25519.pub >> /home/apel/.ssh/authorized_keys
       chmod 600 /home/apel/.ssh/authorized_keys
       chown -R apel:apel /home/apel/.ssh
+      sudo systemctl restart ssh
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
