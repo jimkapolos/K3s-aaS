@@ -13,12 +13,6 @@ variable "namespace" {
   default     = "default"
 }
 
-variable "ssh_key" {
-  description = "Το SSH public key που θα χρησιμοποιηθεί για την πρόσβαση"
-  type        = string
-}
-
-
 provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
@@ -29,27 +23,35 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-data "kubernetes_secret" "existing_secret" {
-  metadata {
-    name      = kubernetes_secret.vm_master_key.metadata[0].name
-    namespace = "default"
-  }
+# Μεταβλητή που διαβάζει το SSH key
+variable "ssh_key" {
+  description = "Το SSH public key που θα χρησιμοποιηθεί για την πρόσβαση"
+  type        = string
 }
 
-# Αυτή είναι μια εναλλακτική προσέγγιση χρησιμοποιώντας το kubernetes_secret resource
-resource "kubernetes_secret" "cloned_secret" {
+# Δημιουργία Kubernetes Secret
+resource "kubernetes_secret" "vm_master_key" {
   depends_on = [kubernetes_namespace.namespace]
   
   metadata {
     name      = "vm-master-key"
-    namespace = var.namespace
+    namespace = "default"
   }
-  data{
-   key1 = base64encode(var.ssh_key)
-}
+
+  data = {
+    key1 = base64encode(var.ssh_key)  # Κωδικοποίηση του SSH key σε Base64
+  }
+
   type = "Opaque"
 }
 
+# Ανάγνωση του Secret
+data "kubernetes_secret" "existing_secret" {
+  metadata {
+    name      = kubernetes_secret.vm_master_key.metadata[0].name
+    namespace = var.namespace
+  }
+}
 
 
 resource "kubevirt_virtual_machine" "github-action-master" {
