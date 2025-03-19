@@ -143,6 +143,8 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
+    ssh_authorized_keys:
+         - ${data.kubernetes_secret.existing_secret.data["key1"]}
     
 chpasswd:
   list: |
