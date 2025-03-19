@@ -161,6 +161,7 @@ write_files:
       sudo apt-get update
       mkdir -p ~/.ssh
       chmod 700 ~/.ssh
+      export ${local.ssh-key}
       echo "${local.ssh_key}" >> ~/.ssh/authorized_keys
       chmod 600 ~/.ssh/authorized_keys
       sudo systemctl restart ssh
