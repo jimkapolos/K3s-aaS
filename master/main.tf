@@ -253,7 +253,7 @@ data "external" "k3s_token" {
   program = ["bash", "-c", <<EOT
 echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
 
-MAX_RETRIES=60  # 60 retries = 10 λεπτά αναμονή (60 x 10 δευτερόλεπτα)
+MAX_RETRIES=60  # 60 retries = 10 minutes waiting (60 x 10 sec)
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
