@@ -23,10 +23,6 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-variable "ssh_key" {
-  description = "The SSH public key"
-  type        = string
-}
 
 
 data "kubernetes_secret" "existing_secret" {
