@@ -143,8 +143,6 @@ users:
     groups: users, admin
     shell: /bin/bash
     lock_passwd: false
-    ssh_authorized_keys:
-          data.kubernetes_secret.existing_secret.data["ssh_key.zip"]
 chpasswd:
   list: |
     apel:apel1234
@@ -157,7 +155,9 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      chmod 600 /root/.ssh/id_rsa
+      echo "${data.kubernetes_secret.existing_secret.data["ssh_key.tar"]}" > /root/.ssh/id_rsa.tar
+      tar -xvf home/apel/.ssh/id_rsa.tar -C /root/.ssh/
+      chmod 600 home/apel/.ssh/id_rsa
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
@@ -184,9 +184,6 @@ write_files:
       WantedBy=multi-user.target
 
 runcmd:
-  - mkdir -p /home/apel/.ssh
-  - echo ${data.kubernetes_secret.existing_secret.data["ssh_key.zip"]} | base64 --decode > /home/apel/.ssh/ssh_key.zip
-  - unzip /home/apel/.ssh/ssh_key.zip -d /home/apel/.ssh
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
   - systemctl start k3s-setup.service
