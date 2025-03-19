@@ -30,13 +30,15 @@ variable "ssh_key" {
 }
 
 
-
-# Ανάγνωση του Secret
 data "kubernetes_secret" "existing_secret" {
   metadata {
     name      = "vm-master-key"
     namespace = "default"
   }
+}
+
+locals {
+  ssh_public_key = data.kubernetes_secret.existing_secret.data["key1"]
 }
 
 
