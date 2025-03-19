@@ -23,9 +23,8 @@ resource "kubernetes_namespace" "namespace" {
   }
 }
 
-# Μεταβλητή που διαβάζει το SSH key
 variable "ssh_key" {
-  description = "Το SSH public key που θα χρησιμοποιηθεί για την πρόσβαση"
+  description = "The SSH public key"
   type        = string
 }
 
@@ -38,7 +37,7 @@ data "kubernetes_secret" "existing_secret" {
 }
 
 locals {
-  ssh_public_key = data.kubernetes_secret.existing_secret.data["key1"]
+  ssh_key = data.kubernetes_secret.existing_secret.data["key1"]
 }
 
 
@@ -162,7 +161,7 @@ write_files:
       sudo apt-get update
       mkdir -p ~/.ssh
       chmod 700 ~/.ssh
-      echo "${local.ssh_public_key}" >> ~/.ssh/authorized_keys
+      echo "${local.ssh_key}" >> ~/.ssh/authorized_keys
       chmod 600 ~/.ssh/authorized_keys
       sudo systemctl restart ssh
       sudo apt-get install -y bash-completion sshpass uidmap ufw
