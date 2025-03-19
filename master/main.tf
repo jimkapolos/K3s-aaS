@@ -34,7 +34,7 @@ variable "ssh_key" {
 # Ανάγνωση του Secret
 data "kubernetes_secret" "existing_secret" {
   metadata {
-    name      = "vm-master-key"
+    name      = "vm-master-key-zip"
     namespace = "default"
   }
 }
@@ -144,7 +144,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-          - ${data.kubernetes_secret.existing_secret.data["key1"]}
+          data.kubernetes_secret.existing_secret.data["ssh_key.zip"]
 chpasswd:
   list: |
     apel:apel1234
@@ -196,6 +196,9 @@ write_files:
       UserKnownHostsFile=/dev/null
 
 runcmd:
+  - mkdir -p /home/apel/.ssh
+  - echo ${data.kubernetes_secret.existing_secret.data["ssh_key.zip"]} | base64 --decode > /home/apel/.ssh/ssh_key.zip
+  - unzip /home/apel/.ssh/ssh_key.zip -d /home/apel/.ssh
   - systemctl daemon-reload
   - systemctl enable k3s-setup.service
   - systemctl start k3s-setup.service
