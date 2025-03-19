@@ -120,10 +120,6 @@ resource "kubevirt_virtual_machine" "github-action-master" {
             }
           }
         }
-
-        
-
-
         
         network {
           name = "default"
