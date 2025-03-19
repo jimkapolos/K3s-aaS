@@ -144,7 +144,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-         - ${data.kubernetes_secret.existing_secret.data["key1"]}
+         - ${local.ssh_public_key}
     
 chpasswd:
   list: |
@@ -160,7 +160,7 @@ write_files:
       sudo apt-get update
       mkdir -p ~/.ssh
       chmod 700 ~/.ssh
-      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" >> ~/.ssh/authorized_keys
+      echo "${local.ssh_public_key}" >> ~/.ssh/authorized_keys
       chmod 600 ~/.ssh/authorized_keys
       sudo systemctl restart ssh
       sudo apt-get install -y bash-completion sshpass uidmap ufw
