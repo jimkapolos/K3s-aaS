@@ -156,6 +156,10 @@ write_files:
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
       echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > /root/.ssh/id_rsa.tar
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+      echo "$(cat ~/.ssh/id_ed25519.pub)" >> ~/.ssh/authorized_keys
+      chmod 600 ~/.ssh/authorized_keys
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
