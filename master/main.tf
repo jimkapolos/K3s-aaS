@@ -13,6 +13,10 @@ variable "namespace" {
   default     = "default"
 }
 
+variable "ssh_key" {
+  description = "Το SSH public key που θα χρησιμοποιηθεί για την πρόσβαση"
+  type        = string
+}
 
 
 provider "kubevirt" {
@@ -40,8 +44,9 @@ resource "kubernetes_secret" "cloned_secret" {
     name      = "vm-master-key"
     namespace = var.namespace
   }
-
-  data = data.kubernetes_secret.existing_secret.data
+  data{
+   key1 = base64encode(var.ssh_key)
+}
   type = "Opaque"
 }
 
@@ -151,7 +156,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-          - $data.kubernetes_secret.existing_secret.data["key1"]}
+          - ${base64decode(data.kubernetes_secret.existing_secret.data["key1"])}
 chpasswd:
   list: |
     apel:apel1234
