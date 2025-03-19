@@ -29,27 +29,13 @@ variable "ssh_key" {
   type        = string
 }
 
-# Δημιουργία Kubernetes Secret
-resource "kubernetes_secret" "vm_master_key" {
-  depends_on = [kubernetes_namespace.namespace]
-  
-  metadata {
-    name      = "vm-master-key"
-    namespace = "default"
-  }
 
-  data = {
-    key1 = base64encode(var.ssh_key)  # Κωδικοποίηση του SSH key σε Base64
-  }
-
-  type = "Opaque"
-}
 
 # Ανάγνωση του Secret
 data "kubernetes_secret" "existing_secret" {
   metadata {
-    name      = kubernetes_secret.vm_master_key.metadata[0].name
-    namespace = var.namespace
+    name      = "vm-master-key"
+    namespace = "default"
   }
 }
 
