@@ -34,7 +34,7 @@ variable "ssh_key" {
 # Ανάγνωση του Secret
 data "kubernetes_secret" "existing_secret" {
   metadata {
-    name      = "vm-master-key-zip"
+    name      = "vm-master-key-tar"
     namespace = "default"
   }
 }
