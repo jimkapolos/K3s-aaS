@@ -157,7 +157,6 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      echo "${data.kubernetes_secret.existing_secret.data["ssh_key.zip"]}" > /root/.ssh/id_rsa
       chmod 600 /root/.ssh/id_rsa
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
