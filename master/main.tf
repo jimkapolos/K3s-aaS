@@ -145,7 +145,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-         - ${local.ssh_public_key}
+         - ${local.ssh_key}
     
 chpasswd:
   list: |
