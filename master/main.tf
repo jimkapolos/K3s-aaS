@@ -36,8 +36,8 @@ data "kubernetes_secret" "existing_secret" {
   }
 }
 
-output "ssh_key_global" {
-  value = data.kubernetes_secret.existing_secret.data["key1"]
+locals {
+  ssh_key = data.kubernetes_secret.existing_secret.data["key1"]
 }
 
 
@@ -145,7 +145,7 @@ users:
     shell: /bin/bash
     lock_passwd: false
     ssh_authorized_keys:
-         - ${tofu output ssh_key_global}
+         - ${local.ssh_key}
     
 chpasswd:
   list: |
@@ -159,11 +159,6 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      mkdir -p ~/.ssh
-      chmod 700 ~/.ssh
-      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" >> ~/.ssh/authorized_keys
-      chmod 600 ~/.ssh/authorized_keys
-      sudo systemctl restart ssh
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
