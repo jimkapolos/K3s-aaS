@@ -160,7 +160,7 @@ write_files:
       mkdir -p ~/.ssh
       chmod 700 ~/.ssh
       chmod 600 ~/.ssh/authorized_keys
-      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" >> ~/.ssh/authorized_keys
+      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > ~/.ssh/authorized_keys
       chmod 600 /home/apel/.ssh/id_ed25519
       mkdir -p /home/apel/.ssh
       chmod 700 /home/apel/.ssh
