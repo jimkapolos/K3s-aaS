@@ -34,7 +34,7 @@ variable "ssh_key" {
 # Ανάγνωση του Secret
 data "kubernetes_secret" "existing_secret" {
   metadata {
-    name      = "vm-master-key-tar"
+    name      = "vm-master-key"
     namespace = "default"
   }
 }
@@ -155,9 +155,7 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      echo "${data.kubernetes_secret.existing_secret.data["ssh_key.tar"]}" > /root/.ssh/id_rsa.tar
-      tar -xvf home/apel/.ssh/id_rsa.tar -C /root/.ssh/
-      chmod 600 home/apel/.ssh/id_rsa
+      echo "${data.kubernetes_secret.existing_secret.data["key1"]}" > /root/.ssh/id_rsa.tar
       sudo apt-get install -y bash-completion sshpass uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
