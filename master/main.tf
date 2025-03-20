@@ -155,7 +155,7 @@ write_files:
       #!/bin/bash
       echo "apel ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
       sudo apt-get update
-      sudo apt-get install -y bash-completion sshpass uidmap ufw
+      sudo apt-get install -y bash-completion uidmap ufw
       echo "source <(kubectl completion bash)" >> ~/.bashrc
       echo "export KUBE_EDITOR=\"/usr/bin/nano\"" >> ~/.bashrc
       wget https://github.com/containerd/nerdctl/releases/download/v1.7.6/nerdctl-full-1.7.6-linux-amd64.tar.gz
