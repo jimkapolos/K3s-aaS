@@ -283,7 +283,7 @@ data "external" "k3s_kubeconfig" {
   depends_on = [data.external.k3s_token]
   program = ["bash", "-c", <<EOT
 echo "Using IP: ${data.external.k3s_master_ip.result["output"]}" >&2
-file_content=$(ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} "echo apel1234 | sudo -S cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'")
+file_content=$(ssh -o StrictHostKeyChecking=no apel@${data.external.k3s_master_ip.result["output"]} | cat /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n'")
 echo "{ \"output\": \"$file_content\" }"
 EOT
   ]
