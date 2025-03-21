@@ -17,12 +17,12 @@ jobs:
       - name: Checkout vm-test repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/K3s-aaS
+          repository: ${{ github.repository_owner }}/vm-test
           path: K3s-aaS
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: View worker folder contents
-        run: ls -la ./K3s-aaS/worker || echo "Worker folder not found in vm-test repository"
+        run: ls -la ./vm-test/worker || echo "Worker folder not found in vm-test repository"
       
       - name: Set up Kubernetes credentials
         env:
@@ -50,10 +50,10 @@ jobs:
           github_token: ${{ secrets.PAT_TOKEN }}
           run_id: ${{ env.RUN_ID }}
           name: master-outputs
-          path: ./K3s-aaS/worker
+          path: ./vm-test/worker
 
       - name: Extract Master Outputs
-        working-directory: ./K3s-aaS/worker
+        working-directory: ./vm-test/worker
         run: |
           unzip master-outputs.zip || echo "No zip file found"
           if [[ -f master-outputs.env ]]; then
@@ -89,15 +89,15 @@ jobs:
         run: echo "Loaded KUBECONFIG=${{ env.KUBECONFIG_FILE }}"
       
       - name: Debug Master Outputs
-        working-directory: ./K3s-aaS/worker
+        working-directory: ./vm-test/worker
         run: cat master-outputs.env || echo "No master-outputs.env file found"
 
       - name: Initialize OpenTofu
-        working-directory: ./K3s-aaS/worker
+        working-directory: ./vm-test/worker
         run: tofu init
         
       - name: Apply OpenTofu Configuration
-        working-directory: ./K3s-aaS/worker
+        working-directory: ./vm-test/worker
         env:
           MASTER_IP: ${{ env.MASTER_IP }}
           K3S_TOKEN: ${{ env.K3S_TOKEN }}
@@ -110,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tofu-tfstate
-          path: ./K3s-aaS/worker/tofu.tfstate
+          path: ./vm-test/worker/tofu.tfstate
 
       - name: Upload kubeconfig to database
         run: |
