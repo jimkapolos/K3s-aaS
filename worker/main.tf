@@ -41,13 +41,6 @@ provider "kubevirt" {
   config_context = "kubernetes-admin@kubernetes"
 }
 
-resource "kubernetes_namespace" "namespace" {
-  metadata {
-    name = var.namespace
-  }
-}
-
-
 
 resource "kubevirt_virtual_machine" "github-action-agent" {
   metadata {
