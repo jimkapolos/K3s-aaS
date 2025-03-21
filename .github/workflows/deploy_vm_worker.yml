@@ -13,16 +13,16 @@ jobs:
     steps:
       - name: Checkout current repository
         uses: actions/checkout@v4
-      
+
       - name: Checkout vm-test repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository_owner }}/vm-test
-          path: vm-test
+          repository: ${{ github.repository_owner }}/K3s-aaS
+          path: K3s-aaS
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: View worker folder contents
-        run: ls -la ./vm-test/worker || echo "Worker folder not found in vm-test repository"
+        run: ls -la ./K3s-aaS/worker || echo "Worker folder not found in vm-test repository"
       
       - name: Set up Kubernetes credentials
         env:
@@ -50,10 +50,10 @@ jobs:
           github_token: ${{ secrets.PAT_TOKEN }}
           run_id: ${{ env.RUN_ID }}
           name: master-outputs
-          path: ./vm-test/worker
+          path: ./K3s-aaS/worker
 
       - name: Extract Master Outputs
-        working-directory: ./vm-test/worker
+        working-directory: ./K3s-aaS/worker
         run: |
           unzip master-outputs.zip || echo "No zip file found"
           if [[ -f master-outputs.env ]]; then
@@ -67,6 +67,15 @@ jobs:
             exit 1
           fi
 
+          if [[ -f kubeconfig.env ]]; then
+            # Loading all variables from the file into the environment
+            export $(grep -v '^#' kubeconfig.env | xargs)
+            echo "KUBECONFIG=$KUBECONFIG_FILE" >> $GITHUB_ENV
+          else
+            echo "Error: kubeconfig.env file not found!"
+            exit 1
+          fi
+
       - name: Verify MASTER_IP
         run: echo "Loaded MASTER_IP=${{ env.MASTER_IP }}"
 
@@ -75,22 +84,24 @@ jobs:
 
       - name: Verify NAMESPACE
         run: echo "Loaded NAMESPACE=${{ env.NAMESPACE }}"
-
+        
+      - name: Verify KUBECONFIG
+        run: echo "Loaded KUBECONFIG=${{ env.KUBECONFIG_FILE }}"
+      
       - name: Debug Master Outputs
-        working-directory: ./vm-test/worker
+        working-directory: ./K3s-aaS/worker
         run: cat master-outputs.env || echo "No master-outputs.env file found"
 
       - name: Initialize OpenTofu
-        working-directory: ./vm-test/worker
+        working-directory: ./K3s-aaS/worker
         run: tofu init
         
       - name: Apply OpenTofu Configuration
-        working-directory: ./vm-test/worker
+        working-directory: ./K3s-aaS/worker
         env:
           MASTER_IP: ${{ env.MASTER_IP }}
           K3S_TOKEN: ${{ env.K3S_TOKEN }}
           NAMESPACE: ${{ env.NAMESPACE}}
-          
         run: |
           tofu plan -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${MASTER_IP}" -var="k3s_token=${K3S_TOKEN}" -var="namespace_master=${NAMESPACE}"
           tofu apply -auto-approve -var="namespace=cluster-${{ github.run_number }}" -var="master_ip=${MASTER_IP}" -var="k3s_token=${K3S_TOKEN}" -var="namespace_master=${NAMESPACE}"
@@ -99,4 +110,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tofu-tfstate
-          path: ./vm-test/worker/tofu.tfstate
+          path: ./K3s-aaS/worker/tofu.tfstate
+
+      - name: Upload kubeconfig to database
+        run: |
+          CLUSTER_ID="cluster_${{ github.run_id }}"
+          USER_ID="${{ github.actor }}"
+          KUBECONFIG=$KUBECONFIG_FILE  # Assuming kubeconfig is stored here
+
+          curl -X POST http://localhost:5000/insert \
+            -H "Content-Type: application/json" \
+            -d '{"cluster_id": "'"${CLUSTER_ID}"'", "user_id": "'"${USER_ID}"'", "kubeconfig": "'"${KUBECONFIG}"'"}'
