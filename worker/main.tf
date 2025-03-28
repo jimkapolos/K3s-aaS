@@ -51,10 +51,6 @@ resource "kubevirt_virtual_machine" "github-action-agent" {
     }
   }
 
-  lifecycle {
-    ignore_changes = [metadata]
-  }
-
   spec {
     run_strategy = "Always"
 
@@ -194,4 +190,3 @@ EOF
     }
   }
 }
-
