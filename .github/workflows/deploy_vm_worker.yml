@@ -100,13 +100,3 @@ jobs:
         with:
           name: tofu-tfstate
           path: ./vm-test/worker/tofu.tfstate
-
-      - name: Upload kubeconfig to database
-        run: |
-          CLUSTER_ID="cluster_${{ github.run_id }}"
-          USER_ID="${{ github.actor }}"
-          KUBECONFIG=$KUBECONFIG_FILE  # Assuming kubeconfig is stored here
-
-          curl -X POST http://localhost:5000/insert \
-            -H "Content-Type: application/json" \
-            -d '{"cluster_id": "'"${CLUSTER_ID}"'", "user_id": "'"${USER_ID}"'", "kubeconfig": "'"${KUBECONFIG}"'"}'
