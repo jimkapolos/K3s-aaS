@@ -67,14 +67,6 @@ jobs:
             exit 1
           fi
 
-          if [[ -f kubeconfig.env ]]; then
-            # Loading all variables from the file into the environment
-            export $(grep -v '^#' kubeconfig.env | xargs)
-            echo "KUBECONFIG=$KUBECONFIG_FILE" >> $GITHUB_ENV
-          else
-            echo "Error: kubeconfig.env file not found!"
-            exit 1
-          fi
 
       - name: Verify MASTER_IP
         run: echo "Loaded MASTER_IP=${{ env.MASTER_IP }}"
@@ -84,9 +76,6 @@ jobs:
 
       - name: Verify NAMESPACE
         run: echo "Loaded NAMESPACE=${{ env.NAMESPACE }}"
-        
-      - name: Verify KUBECONFIG
-        run: echo "Loaded KUBECONFIG=${{ env.KUBECONFIG_FILE }}"
       
       - name: Debug Master Outputs
         working-directory: ./vm-test/worker
