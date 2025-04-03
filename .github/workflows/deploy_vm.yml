@@ -26,7 +26,7 @@ jobs:
       
       - name: Install OpenTofu
         run: |
-          sudo snap install --classic opentofu
+          snap install --classic opentofu
           tofu --version
       
       - name: Set up Kubernetes credentials
