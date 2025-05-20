@@ -31,7 +31,7 @@ jobs:
       
       - name: Set up Kubernetes credentials
         env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_TEST }}
         run: |
           sudo mkdir -p /root/.kube
           echo "$KUBE_CONFIG" | sudo tee /root/.kube/config > /dev/null
